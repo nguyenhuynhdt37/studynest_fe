@@ -1,182 +1,234 @@
 "use client";
-import Image from "next/image";
 import React, { useEffect, useState } from "react";
+import { HiAcademicCap } from "react-icons/hi";
 
 const tips = [
-  "Học tập từng bước nhỏ sẽ tạo ra thành công lớn",
-  "Lập trình viên giỏi không phải là người không gặp bug",
-  "Thất bại là cách bạn học code tốt hơn",
-  "Code sạch giúp dự án của bạn bền vững",
-  "Kiên nhẫn là kỹ năng quan trọng nhất của lập trình viên",
-  "Đầu tư thời gian cho việc đọc mã nguồn mở",
-  "Rèn luyện kỹ năng debug sẽ giúp bạn tiết kiệm thời gian",
+  "🌱 Mỗi ngày học một chút, bạn sẽ xây được cả một kho tri thức lớn",
+  "💡 Thất bại chỉ là bước đệm để bạn hiểu sâu hơn và tiến xa hơn",
+  "🔑 Kiên nhẫn là chiếc chìa khóa mở ra mọi cánh cửa thành công",
+  "🤝 Chia sẻ kiến thức giúp bạn ghi nhớ lâu và học nhanh hơn",
+  "🎯 Học đa dạng kỹ năng sẽ giúp bạn thích ứng tốt với mọi thay đổi",
+  "⭐ Đặt mục tiêu nhỏ và kiên trì sẽ tạo nên những bước tiến lớn",
+  "🧠 Không ngừng tò mò và đặt câu hỏi, đó là cách bạn trưởng thành",
+  "📚 Tri thức là sức mạnh, học tập là chìa khóa thành công",
+  "🚀 Hành trình nghìn dặm bắt đầu từ một bước chân",
+  "💪 Mỗi thử thách là cơ hội để bạn trở nên mạnh mẽ hơn",
 ];
-
-const LoadingSpinner = () => {
+const StudyNestLoading = () => {
   const [progress, setProgress] = useState(0);
   const [tipIndex, setTipIndex] = useState(0);
   const [mounted, setMounted] = useState(false);
+  const [currentStep, setCurrentStep] = useState(0);
+  const [isCompleting, setIsCompleting] = useState(false);
+
+  const loadingSteps = [
+    "Đang khởi tạo môi trường học tập...",
+    "Đang tải nội dung khóa học...",
+    "Đang chuẩn bị giao diện...",
+    "Sắp hoàn thành...",
+  ];
 
   useEffect(() => {
     setMounted(true);
 
-    // Progress animation
+    // Progress animation with realistic steps
     const interval = setInterval(() => {
       setProgress((prev) => {
-        const nextProgress = prev + Math.random() * 10;
-        return nextProgress > 95 ? 95 : nextProgress;
+        const increment = Math.random() * 8 + 2;
+        const nextProgress = prev + increment;
+
+        // Update loading steps based on progress
+        if (nextProgress > 25 && currentStep === 0) setCurrentStep(1);
+        if (nextProgress > 50 && currentStep === 1) setCurrentStep(2);
+        if (nextProgress > 75 && currentStep === 2) setCurrentStep(3);
+        if (nextProgress > 90 && !isCompleting) {
+          setIsCompleting(true);
+          return 92;
+        }
+
+        return nextProgress > 92 ? 92 : nextProgress;
       });
-    }, 400);
+    }, 300);
 
     // Tip rotation
     const tipInterval = setInterval(() => {
       setTipIndex((prev) => (prev + 1) % tips.length);
-    }, 3000);
+    }, 2500);
 
     return () => {
       clearInterval(interval);
       clearInterval(tipInterval);
     };
-  }, []);
+  }, [currentStep, isCompleting]);
 
-  // Simulate faster loading completion after some time
+  // Complete loading after realistic time
   useEffect(() => {
     const timer = setTimeout(() => {
       setProgress(100);
-    }, 5000);
+    }, 4000);
 
     return () => clearTimeout(timer);
   }, []);
 
   return (
-    <div className="fixed inset-0 flex flex-col items-center justify-center z-50 perspective">
-      {/* Background with animated gradient */}
-      <div className="absolute inset-0 bg-gradient-to-br from-indigo-50 via-white to-blue-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 opacity-90">
-        {/* Animated particles */}
-        <div className="particles">
-          {[...Array(20)].map((_, i) => (
+    <div className="fixed inset-0 flex flex-col items-center justify-center z-50 studynest-loading">
+      {/* StudyNest Branded Background */}
+      <div className="absolute inset-0 bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 opacity-95">
+        {/* Floating Knowledge Icons */}
+        <div className="floating-icons">
+          {[...Array(12)].map((_, i) => (
             <div
               key={i}
-              className="particle"
+              className="floating-icon"
               style={
                 {
                   "--index": i,
                   "--x": `${Math.random() * 100}%`,
                   "--y": `${Math.random() * 100}%`,
-                  "--size": `${Math.random() * 10 + 5}px`,
-                  "--delay": `${Math.random() * 5}s`,
+                  "--delay": `${Math.random() * 3}s`,
+                  "--duration": `${4 + Math.random() * 2}s`,
                 } as React.CSSProperties
               }
-            />
+            >
+              {["📚", "🎓", "💡", "🚀", "⭐", "🌟"][i % 6]}
+            </div>
           ))}
+        </div>
+
+        {/* Grid Pattern */}
+        <div className="absolute inset-0 opacity-[0.03]">
+          <div className="grid-pattern" />
         </div>
       </div>
 
       <div
         className={`transform transition-all duration-1000 ${
-          mounted ? "scale-100 opacity-100" : "scale-90 opacity-0"
+          mounted
+            ? "scale-100 opacity-100 translate-y-0"
+            : "scale-95 opacity-0 translate-y-4"
         }`}
       >
-        <div className="relative flex flex-col items-center max-w-md px-10 py-12 bg-white dark:bg-gray-800 rounded-2xl shadow-2xl backdrop-blur-lg bg-opacity-90 dark:bg-opacity-80">
-          {/* Animated code lines */}
-          <div className="absolute inset-0 overflow-hidden rounded-2xl opacity-10">
-            <div className="code-lines" />
+        <div className="relative flex flex-col items-center max-w-lg px-12 py-16 bg-white/80 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20">
+          {/* StudyNest Logo Section - Trọng tâm */}
+          <div className="relative mb-8">
+            {/* Orbiting Elements */}
+            <div className="relative h-40 w-40">
+              {/* Rotating rings with StudyNest colors - Larger */}
+              <div className="absolute inset-0 rounded-full border-[3px] border-green-300 animate-spin-slow opacity-50" />
+              <div className="absolute inset-3 rounded-full border-2 border-emerald-300 animate-spin-reverse opacity-40" />
+              <div className="absolute inset-6 rounded-full border-2 border-teal-400 animate-pulse opacity-60" />
+
+              {/* Orbiting dots - More prominent */}
+              {[...Array(3)].map((_, i) => (
+                <div
+                  key={i}
+                  className="absolute w-4 h-4 bg-gradient-to-r from-green-400 to-emerald-500 rounded-full orbit-dot shadow-lg shadow-green-500/50"
+                  style={
+                    {
+                      "--orbit-angle": `${i * 120}deg`,
+                      "--orbit-delay": `${i * 0.8}s`,
+                    } as React.CSSProperties
+                  }
+                />
+              ))}
+
+              {/* Main logo container - Bigger & More prominent */}
+              <div className="absolute inset-8 flex items-center justify-center rounded-2xl bg-gradient-to-br from-green-400 via-emerald-500 to-teal-500 shadow-2xl shadow-green-500/50">
+                <div className="relative">
+                  {/* Glowing effect behind logo */}
+                  <div className="absolute inset-0 bg-white rounded-xl blur-xl opacity-50 animate-pulse" />
+                  {/* StudyNest Icon */}
+                  <div className="relative z-10 logo-float">
+                    <HiAcademicCap className="text-white text-6xl drop-shadow-2xl" />
+                  </div>
+                </div>
+              </div>
+
+              {/* Outer glow ring */}
+              <div className="absolute inset-0 rounded-full bg-gradient-to-br from-green-400/20 to-emerald-400/20 blur-2xl animate-pulse-slow" />
+            </div>
           </div>
 
-          {/* Glowing ring */}
-          <div className="relative h-40 w-40 mb-8">
-            {/* Multiple rotating rings */}
-            <div className="absolute inset-0 ring-1 rounded-full ring-offset-1 animate-spin-slower" />
-            <div className="absolute inset-0 ring-2 rounded-full ring-blue-500 ring-offset-1 animate-spin-slow opacity-30" />
-            <div className="absolute inset-0 ring-2 rounded-full ring-orange-500 ring-offset-2 animate-spin-reverse opacity-20" />
+          {/* StudyNest Branding */}
+          <div className="text-center mb-6">
+            <h1 className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-green-600 via-emerald-600 to-teal-600 mb-2 tracking-wide">
+              STUDYNEST
+            </h1>
+            <p className="text-sm font-semibold text-emerald-600 tracking-widest uppercase">
+              Nền tảng học trực tuyến
+            </p>
+          </div>
 
-            {/* Glowing circles */}
-            {[...Array(4)].map((_, i) => (
-              <div
-                key={i}
-                className="absolute glow-dot"
-                style={
-                  {
-                    "--index": i,
-                    "--angle": `${i * 90}deg`,
-                  } as React.CSSProperties
-                }
-              />
-            ))}
-
-            {/* Main logo container */}
-            <div className="absolute inset-5 flex items-center justify-center rounded-full bg-gradient-to-br from-blue-100 to-blue-50 dark:from-gray-800 dark:to-gray-900 shadow-inner pulse-animation">
-              <div className="relative w-24 h-24 rounded-full overflow-hidden flex items-center justify-center">
-                {/* Logo with glow effect */}
-                <div className="absolute inset-0 logo-glow" />
-                <Image
-                  src="/logo/logo1.png"
-                  alt="F8 Logo"
-                  width={85}
-                  height={85}
-                  className="z-10 drop-shadow-xl hover-float dark:brightness-110"
-                />
+          {/* Loading Status */}
+          <div className="mb-6 text-center">
+            <h2 className="text-lg font-semibold text-gray-700 mb-2">
+              {loadingSteps[currentStep]}
+            </h2>
+            <div className="flex items-center justify-center space-x-1">
+              <div className="flex space-x-1">
+                {[...Array(3)].map((_, i) => (
+                  <div
+                    key={i}
+                    className="w-2 h-2 bg-green-500 rounded-full animate-bounce"
+                    style={{ animationDelay: `${i * 0.2}s` }}
+                  />
+                ))}
               </div>
             </div>
           </div>
 
-          <h2 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400 text-transparent bg-clip-text mb-3 animate-shimmer">
-            Đang tải dữ liệu...
-          </h2>
-
-          {/* Progress bar with animated glow */}
-          <div className="w-64 h-2 bg-gray-200 dark:bg-gray-700 rounded-full mb-5 overflow-hidden relative">
-            <div
-              className="absolute h-full bg-gradient-to-r from-blue-500 via-indigo-500 to-blue-600 rounded-full glow-bar transition-all duration-300 ease-out"
-              style={{ width: `${progress}%` }}
-            />
-            <div className="absolute h-full w-20 bg-white/20 animate-shimmer-bar rounded-full" />
+          {/* Enhanced Progress Bar */}
+          <div className="w-80 mb-8">
+            <div className="flex justify-between text-sm text-gray-500 mb-2">
+              <span>Tiến độ</span>
+              <span>{Math.round(progress)}%</span>
+            </div>
+            <div className="h-3 bg-gray-200 rounded-full overflow-hidden relative shadow-inner">
+              <div
+                className="absolute h-full bg-gradient-to-r from-green-500 via-emerald-500 to-teal-500 rounded-full progress-glow transition-all duration-500 ease-out"
+                style={{ width: `${progress}%` }}
+              />
+              <div className="absolute h-full w-16 bg-white/30 animate-shimmer-progress rounded-full" />
+            </div>
           </div>
 
-          {/* Animated tip messages */}
-          <div className="h-16 text-center overflow-hidden relative">
+          {/* Learning Tips Carousel */}
+          <div className="h-20 text-center overflow-hidden relative w-full px-4">
             <div
-              className="w-full transition-transform duration-500 ease-out px-4"
+              className="transition-transform duration-700 ease-in-out"
               style={{
                 transform: `translateY(-${tipIndex * 100}%)`,
               }}
             >
               {tips.map((tip, i) => (
-                <p
+                <div
                   key={i}
-                  className="h-16 flex items-center justify-center text-gray-600 dark:text-gray-300 italic"
+                  className="h-20 flex items-center justify-center text-gray-600 text-base leading-relaxed px-2"
                 >
                   {tip}
-                </p>
+                </div>
               ))}
             </div>
           </div>
 
-          <div className="mt-6 flex items-center text-xs text-gray-500 dark:text-gray-400 font-code">
-            <span className="animate-blink mr-2">▶</span>
-            <span className="typing-animation">
-              console.log("Hello F8 Developer");
-            </span>
+          {/* StudyNest Footer */}
+          <div className="mt-8 text-center">
+            <div className="flex items-center justify-center text-xs text-gray-400 font-mono">
+              <span className="animate-pulse mr-2 text-green-500">●</span>
+              <span>Powered by StudyNest Learning Platform</span>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Custom animation styles */}
+      {/* StudyNest Loading Styles */}
       <style jsx>{`
-        .perspective {
-          perspective: 1000px;
+        .studynest-loading {
+          font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+            sans-serif;
         }
 
         @keyframes spin-slow {
-          from {
-            transform: rotate(0deg);
-          }
-          to {
-            transform: rotate(360deg);
-          }
-        }
-
-        @keyframes spin-slower {
           from {
             transform: rotate(0deg);
           }
@@ -194,201 +246,123 @@ const LoadingSpinner = () => {
           }
         }
 
-        @keyframes shimmer {
+        @keyframes float-up {
           0% {
-            background-position: -100% 0;
-          }
-          100% {
-            background-position: 200% 0;
-          }
-        }
-
-        @keyframes float {
-          0%,
-          100% {
-            transform: translateY(0);
+            transform: translateY(100px);
+            opacity: 0;
           }
           50% {
-            transform: translateY(-4px);
-          }
-        }
-
-        @keyframes pulse {
-          0%,
-          100% {
-            transform: scale(1);
             opacity: 1;
           }
-          50% {
-            transform: scale(1.05);
-            opacity: 0.9;
-          }
-        }
-
-        @keyframes blink {
-          0%,
           100% {
-            opacity: 1;
-          }
-          50% {
-            opacity: 0.5;
+            transform: translateY(-100px);
+            opacity: 0;
           }
         }
 
-        @keyframes typing {
+        @keyframes shimmer-progress {
+          0% {
+            transform: translateX(-100%);
+          }
+          100% {
+            transform: translateX(400%);
+          }
+        }
+
+        @keyframes orbit {
           from {
-            width: 0;
+            transform: rotate(0deg) translateX(50px) rotate(0deg);
           }
           to {
-            width: 100%;
+            transform: rotate(360deg) translateX(50px) rotate(-360deg);
           }
         }
 
-        @keyframes move-particle {
-          0% {
-            transform: translate(0, 0);
-            opacity: 0;
-          }
-          25% {
-            opacity: 1;
-          }
-          75% {
-            opacity: 0.5;
-          }
+        @keyframes logo-float {
+          0%,
           100% {
-            transform: translate(var(--move-x, 50px), var(--move-y, 50px));
-            opacity: 0;
+            transform: translateY(0) scale(1);
+          }
+          50% {
+            transform: translateY(-8px) scale(1.05);
           }
         }
 
-        @keyframes code-scroll {
-          0% {
-            transform: translateY(0);
-          }
+        @keyframes gradient-shift {
+          0%,
           100% {
-            transform: translateY(-50%);
+            background-position: 0% 50%;
+          }
+          50% {
+            background-position: 100% 50%;
           }
         }
 
         :global(.animate-spin-slow) {
-          animation: spin-slow 4s linear infinite;
-        }
-
-        :global(.animate-spin-slower) {
-          animation: spin-slower 7s linear infinite;
+          animation: spin-slow 3s linear infinite;
         }
 
         :global(.animate-spin-reverse) {
-          animation: spin-reverse 5s linear infinite;
+          animation: spin-reverse 4s linear infinite;
         }
 
-        :global(.animate-shimmer) {
-          background-size: 200% 100%;
-          animation: shimmer 2s linear infinite;
+        :global(.animate-shimmer-progress) {
+          animation: shimmer-progress 2s linear infinite;
         }
 
-        :global(.animate-shimmer-bar) {
-          animation: shimmer 1.5s linear infinite;
+        :global(.logo-float) {
+          animation: logo-float 3s ease-in-out infinite;
         }
 
-        :global(.hover-float) {
-          animation: float 3s ease-in-out infinite;
-        }
-
-        :global(.animate-blink) {
-          animation: blink 1s step-end infinite;
-        }
-
-        :global(.typing-animation) {
-          display: inline-block;
-          overflow: hidden;
-          white-space: nowrap;
-          border-right: 2px solid;
-          width: 0;
-          animation: typing 3s steps(30, end) forwards;
-        }
-
-        :global(.pulse-animation) {
-          animation: pulse 2s ease-in-out infinite;
-        }
-
-        .font-code {
-          font-family: monospace;
-        }
-
-        .glow-dot {
+        .floating-icons .floating-icon {
           position: absolute;
-          width: 10px;
-          height: 10px;
-          border-radius: 50%;
-          background-color: rgb(59, 130, 246);
-          filter: blur(1px);
-          transform-origin: center 100px;
-          transform: rotate(var(--angle)) translateY(-100px);
-          animation: spin-slow 4s linear infinite;
-          opacity: 0.7;
-          box-shadow: 0 0 15px 5px rgba(59, 130, 246, 0.4);
+          font-size: 1.5rem;
+          left: var(--x);
+          top: var(--y);
+          animation: float-up var(--duration) ease-in-out infinite;
+          animation-delay: var(--delay);
+          pointer-events: none;
+          user-select: none;
         }
 
-        .logo-glow {
-          background: radial-gradient(
-            circle at center,
-            rgba(59, 130, 246, 0.3) 0%,
-            transparent 70%
-          );
+        .orbit-dot {
+          top: 50%;
+          left: 50%;
+          transform-origin: center;
+          animation: orbit 4s linear infinite;
+          animation-delay: var(--orbit-delay);
+          transform: rotate(var(--orbit-angle)) translateX(50px)
+            rotate(calc(-1 * var(--orbit-angle)));
         }
 
-        .glow-bar {
-          box-shadow: 0 0 15px 3px rgba(59, 130, 246, 0.5);
+        .progress-glow {
+          box-shadow: 0 0 20px rgba(20, 184, 166, 0.4),
+            inset 0 1px 0 rgba(255, 255, 255, 0.3);
         }
 
-        .particles .particle {
-          position: absolute;
-          width: var(--size, 8px);
-          height: var(--size, 8px);
-          background-color: rgba(59, 130, 246, 0.3);
-          border-radius: 50%;
-          left: var(--x, 50%);
-          top: var(--y, 50%);
-          --move-x: calc(var(--index) * 30px - 150px);
-          --move-y: calc(var(--index) * 20px - 100px);
-          animation: move-particle 10s linear infinite;
-          animation-delay: var(--delay, 0s);
-        }
-
-        .code-lines {
-          height: 200%;
-          width: 100%;
+        .grid-pattern {
           background-image: linear-gradient(
-              0deg,
-              transparent 24%,
-              rgba(59, 130, 246, 0.05) 25%,
-              rgba(59, 130, 246, 0.05) 26%,
-              transparent 27%,
-              transparent 74%,
-              rgba(59, 130, 246, 0.05) 75%,
-              rgba(59, 130, 246, 0.05) 76%,
-              transparent 77%,
-              transparent
+              rgba(34, 197, 94, 0.1) 1px,
+              transparent 1px
             ),
-            linear-gradient(
-              90deg,
-              transparent 24%,
-              rgba(59, 130, 246, 0.05) 25%,
-              rgba(59, 130, 246, 0.05) 26%,
-              transparent 27%,
-              transparent 74%,
-              rgba(59, 130, 246, 0.05) 75%,
-              rgba(59, 130, 246, 0.05) 76%,
-              transparent 77%,
-              transparent
-            );
+            linear-gradient(90deg, rgba(34, 197, 94, 0.1) 1px, transparent 1px);
           background-size: 50px 50px;
-          animation: code-scroll 20s linear infinite;
+          width: 100%;
+          height: 100%;
+          animation: grid-move 20s linear infinite;
+        }
+
+        @keyframes grid-move {
+          0% {
+            transform: translate(0, 0);
+          }
+          100% {
+            transform: translate(50px, 50px);
+          }
         }
       `}</style>
     </div>
   );
 };
 
-export default LoadingSpinner;
+export default StudyNestLoading;

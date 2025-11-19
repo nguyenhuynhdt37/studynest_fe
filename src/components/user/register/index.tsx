@@ -1,16 +1,9 @@
 "use client";
 
-import {
-  getPasswordStrength,
-  validateEmail,
-  validateFullName,
-  validatePassword,
-  validatePasswordConfirmation,
-} from "@/lib/function/rules";
-import api from "@/lib/utils/ fetcher/client/axios";
+import api from "@/lib/utils/fetcher/client/axios";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { FaGithub, FaGoogle } from "react-icons/fa";
+import { FaGoogle } from "react-icons/fa";
 import {
   HiAcademicCap,
   HiCheckCircle,
@@ -28,6 +21,41 @@ const Register = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+
+  // Local validators (tối giản giống trang đăng nhập)
+  const validateEmail = (value: string) => {
+    if (!value.trim()) return "Email không được để trống";
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(value)) return "Email không hợp lệ";
+    return "";
+  };
+  const validateFullName = (value: string) => {
+    if (!value.trim()) return "Họ và tên không được để trống";
+    if (value.trim().length < 2) return "Họ và tên quá ngắn";
+    return "";
+  };
+  const validatePassword = (value: string) => {
+    if (!value.trim()) return "Mật khẩu không được để trống";
+    if (value.length < 6) return "Mật khẩu phải có ít nhất 6 ký tự";
+    return "";
+  };
+  const validatePasswordConfirmation = (pass: string, confirm: string) => {
+    if (!confirm.trim()) return "Vui lòng xác nhận mật khẩu";
+    if (pass !== confirm) return "Mật khẩu xác nhận không khớp";
+    return "";
+  };
+  const getPasswordStrength = (password: string) => {
+    let score = 0;
+    if (password.length >= 6) score++;
+    if (password.length >= 10) score++;
+    if (/[A-Z]/.test(password)) score++;
+    if (/[0-9]/.test(password)) score++;
+    if (/[^A-Za-z0-9]/.test(password)) score++;
+    if (score <= 2) return { level: "weak", color: "text-red-600" };
+    if (score === 3) return { level: "medium", color: "text-yellow-600" };
+    if (score === 4) return { level: "strong", color: "text-green-600" };
+    return { level: "very-strong", color: "text-green-700" };
+  };
 
   // Validation states
   const [emailError, setEmailError] = useState<string>("");
@@ -189,11 +217,19 @@ const Register = () => {
     }
   };
 
+  const handleGoogleRegister = () => {
+    const backend =
+      process.env.NEXT_PUBLIC_URL_BACKEND || "http://127.0.0.1:8000";
+    if (typeof window !== "undefined") {
+      window.location.href = `${backend}/api/v1/auth/google/login?redirect=/`;
+    }
+  };
+
   // Get password strength for display
   const passwordStrength = password ? getPasswordStrength(password) : null;
 
   return (
-    <div className="min-h-screen bg-white flex">
+    <div className="min-h-screen bg-gray-50 flex">
       {/* Left side - Register Form */}
       <div className="flex-1 flex items-center justify-center px-4 sm:px-6 lg:px-8">
         <div className="max-w-md w-full space-y-8">
@@ -204,11 +240,11 @@ const Register = () => {
             </h2>
             <p className="text-gray-600">
               Bằng cách đăng ký, bạn đồng ý với{" "}
-              <a href="#" className="text-teal-600 hover:underline">
+              <a href="#" className="text-green-700 hover:underline">
                 Điều khoản sử dụng
               </a>{" "}
               và{" "}
-              <a href="#" className="text-teal-600 hover:underline">
+              <a href="#" className="text-green-700 hover:underline">
                 Chính sách bảo mật
               </a>{" "}
               của chúng tôi.
@@ -216,17 +252,14 @@ const Register = () => {
           </div>
 
           {/* Social Login Buttons */}
-          <div className="space-y-3">
-            <button className="w-full flex items-center justify-center px-4 py-3 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
-              <FaGoogle className="w-5 h-5 mr-3 text-red-500" />
-              Đăng ký với Google
-            </button>
-
-            <button className="w-full flex items-center justify-center px-4 py-3 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
-              <FaGithub className="w-5 h-5 mr-3 text-gray-900" />
-              Đăng ký với GitHub
-            </button>
-          </div>
+          <button
+            type="button"
+            onClick={handleGoogleRegister}
+            className="w-full flex items-center justify-center gap-2 px-4 py-2.5 border-2 border-gray-200 rounded-lg bg-white text-sm font-medium text-gray-800 hover:border-green-300 hover:bg-green-50 transition-colors"
+          >
+            <FaGoogle className="w-5 h-5 text-red-500" />
+            Đăng ký với Google
+          </button>
 
           {/* Divider */}
           <div className="relative">
@@ -257,7 +290,7 @@ const Register = () => {
                 className={`relative block w-full px-3 py-4 border placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:z-10 text-sm ${
                   fullNameError
                     ? "border-red-300 focus:ring-red-500 focus:border-red-500"
-                    : "border-gray-300 focus:ring-teal-500 focus:border-teal-500"
+                    : "border-gray-300 focus:ring-green-500 focus:border-green-500"
                 }`}
                 placeholder="Họ và tên"
               />
@@ -283,7 +316,7 @@ const Register = () => {
                 className={`relative block w-full px-3 py-4 border placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:z-10 text-sm ${
                   emailError
                     ? "border-red-300 focus:ring-red-500 focus:border-red-500"
-                    : "border-gray-300 focus:ring-teal-500 focus:border-teal-500"
+                    : "border-gray-300 focus:ring-green-500 focus:border-green-500"
                 }`}
                 placeholder="Email"
               />
@@ -309,7 +342,7 @@ const Register = () => {
                 className={`relative block w-full px-3 py-4 pr-12 border placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:z-10 text-sm ${
                   passwordError
                     ? "border-red-300 focus:ring-red-500 focus:border-red-500"
-                    : "border-gray-300 focus:ring-teal-500 focus:border-teal-500"
+                    : "border-gray-300 focus:ring-green-500 focus:border-green-500"
                 }`}
                 placeholder="Mật khẩu"
               />
@@ -336,10 +369,10 @@ const Register = () => {
                           passwordStrength.level === "weak"
                             ? "bg-red-500 w-1/4"
                             : passwordStrength.level === "medium"
-                            ? "bg-yellow-500 w-2/4"
+                          ? "bg-yellow-400 w-2/4"
                             : passwordStrength.level === "strong"
-                            ? "bg-green-500 w-3/4"
-                            : "bg-green-600 w-full"
+                          ? "bg-green-500 w-3/4"
+                          : "bg-green-600 w-full"
                         }`}
                       />
                     </div>
@@ -380,7 +413,7 @@ const Register = () => {
                 className={`relative block w-full px-3 py-4 pr-12 border placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:z-10 text-sm ${
                   confirmPasswordError && touched.confirmPassword
                     ? "border-red-300 focus:ring-red-500 focus:border-red-500"
-                    : "border-gray-300 focus:ring-teal-500 focus:border-teal-500"
+                    : "border-gray-300 focus:ring-green-500 focus:border-green-500"
                 }`}
                 placeholder="Xác nhận mật khẩu"
               />
@@ -408,7 +441,7 @@ const Register = () => {
               <button
                 type="submit"
                 disabled={isLoading || !isFormValid()}
-                className="group relative w-full flex justify-center py-4 px-4 border border-transparent text-sm font-bold rounded-md text-white bg-teal-600 hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="group relative w-full flex justify-center py-4 px-4 border border-transparent text-sm font-bold rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 {isLoading ? "Đang tạo tài khoản..." : "Tạo tài khoản"}
               </button>
@@ -431,7 +464,7 @@ const Register = () => {
       </div>
 
       {/* Right side - Image/Illustration */}
-      <div className="hidden lg:block lg:w-1/2 bg-gradient-to-br from-teal-600 to-teal-700">
+      <div className="hidden lg:block lg:w-1/2 bg-gradient-to-br from-green-600 to-green-700">
         <div className="h-full flex items-center justify-center p-12">
           <div className="text-center text-white">
             <div className="mb-8">

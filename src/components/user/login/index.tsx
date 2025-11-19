@@ -1,19 +1,46 @@
 "use client";
 
-import { validateEmail, validatePassword } from "@/lib/function/rules";
-import api from "@/lib/utils/ fetcher/client/axios";
-import { useRouter } from "next/navigation";
+import api from "@/lib/utils/fetcher/client/axios";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
-import { FaGithub, FaGoogle } from "react-icons/fa";
-import {
-  HiAcademicCap,
-  HiCheckCircle,
-  HiEye,
-  HiEyeOff,
-  HiUsers,
-} from "react-icons/hi";
+import { FaGoogle } from "react-icons/fa";
+import { HiEye, HiEyeOff } from "react-icons/hi";
+
+// Validation functions
+const validateEmail = (
+  email: string
+): { isValid: boolean; message: string } => {
+  if (!email.trim()) {
+    return { isValid: false, message: "Email không được để trống" };
+  }
+
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    return { isValid: false, message: "Email không hợp lệ" };
+  }
+
+  return { isValid: true, message: "" };
+};
+
+const validatePassword = (
+  password: string
+): { isValid: boolean; message: string } => {
+  if (!password.trim()) {
+    return { isValid: false, message: "Mật khẩu không được để trống" };
+  }
+
+  if (password.length < 6) {
+    return { isValid: false, message: "Mật khẩu phải có ít nhất 6 ký tự" };
+  }
+
+  return { isValid: true, message: "" };
+};
 
 const Login = () => {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirectUrl = searchParams.get("redirect") || "/";
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -27,7 +54,6 @@ const Login = () => {
     email: false,
     password: false,
   });
-  const router = useRouter();
   // Validation handlers
   const handleEmailChange = (value: string) => {
     setEmail(value);
@@ -43,9 +69,10 @@ const Login = () => {
   const handlePasswordChange = (value: string) => {
     setPassword(value);
     if (touched.password) {
+      const validation = validatePassword(value);
       setErrors((prev) => ({
         ...prev,
-        password: value.length < 6 ? "Mật khẩu phải có ít nhất 6 ký tự" : "",
+        password: validation.isValid ? "" : validation.message,
       }));
     }
   };
@@ -72,7 +99,7 @@ const Login = () => {
 
   const validateForm = () => {
     const emailValidation = validateEmail(email);
-    const passwordValid = password.length >= 6;
+    const passwordValidation = validatePassword(password);
 
     const newErrors: typeof errors = {};
 
@@ -80,12 +107,12 @@ const Login = () => {
       newErrors.email = emailValidation.message;
     }
 
-    if (!passwordValid) {
-      newErrors.password = "Mật khẩu phải có ít nhất 6 ký tự";
+    if (!passwordValidation.isValid) {
+      newErrors.password = passwordValidation.message;
     }
 
     setErrors(newErrors);
-    return emailValidation.isValid && passwordValid;
+    return emailValidation.isValid && passwordValidation.isValid;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -105,10 +132,20 @@ const Login = () => {
 
     try {
       const res = await api.post("/auth/login", { email, password });
-      router.push("/dashboard");
+      // Redirect về URL được chỉ định hoặc về trang chủ
+      router.push(redirectUrl);
+      router.refresh();
     } catch (error: any) {
       if (error?.status === 401) {
-        router.push("/email_authentication?email=" + encodeURIComponent(email));
+        const redirectParam =
+          redirectUrl !== "/"
+            ? `&redirect=${encodeURIComponent(redirectUrl)}`
+            : "";
+        router.push(
+          "/email_authentication?email=" +
+            encodeURIComponent(email) +
+            redirectParam
+        );
       } else if (error?.status === 404) {
         setErrors((prev) => ({
           ...prev,
@@ -125,64 +162,54 @@ const Login = () => {
     }
   };
 
+  const handleGoogleLogin = () => {
+    const backend =
+      process.env.NEXT_PUBLIC_URL_BACKEND || "http://127.0.0.1:8000";
+    const redirectParam = redirectUrl
+      ? `?redirect=${encodeURIComponent(redirectUrl)}`
+      : "";
+    if (typeof window !== "undefined") {
+      window.location.href = `${backend}/api/v1/auth/google/login${redirectParam}`;
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-white flex">
-      {/* Left side - Login Form */}
-      <div className="flex-1 flex items-center justify-center px-4 sm:px-6 lg:px-8">
-        <div className="max-w-md w-full space-y-8">
-          {/* Header */}
-          <div className="text-center">
-            <h2 className="text-3xl font-bold text-gray-900 mb-2">
-              Đăng nhập vào tài khoản của bạn
-            </h2>
-            <p className="text-gray-600">
-              Bằng cách đăng nhập, bạn đồng ý với{" "}
-              <a href="#" className="text-teal-600 hover:underline">
-                Điều khoản sử dụng
-              </a>{" "}
-              và{" "}
-              <a href="#" className="text-teal-600 hover:underline">
-                Chính sách bảo mật
-              </a>{" "}
-              của chúng tôi.
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
+      <div className="w-full max-w-md">
+        <div className="rounded-2xl shadow-sm border-2 border-gray-200 bg-white p-6 space-y-6">
+          <div className="text-center space-y-1">
+            <img
+              src="/logo/studynest-logo.svg"
+              alt="StudyNest"
+              className="w-10 h-10 mx-auto"
+            />
+            <h1 className="text-2xl font-bold text-gray-900">Đăng nhập</h1>
+            <p className="text-sm text-gray-600">
+              Sử dụng email và mật khẩu của bạn
             </p>
           </div>
 
-          {/* Social Login Buttons */}
-          <div className="space-y-3">
-            <button className="w-full flex items-center justify-center px-4 py-3 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
-              <FaGoogle className="w-5 h-5 mr-3 text-red-500" />
-              Tiếp tục với Google
-            </button>
+          <button
+            type="button"
+            onClick={handleGoogleLogin}
+            className="w-full flex items-center justify-center gap-2 px-4 py-2.5 border-2 border-gray-200 rounded-lg bg-white text-sm font-medium text-gray-800 hover:border-green-300 hover:bg-green-50 transition-colors"
+          >
+            <FaGoogle className="w-5 h-5 text-red-500" />
+            Đăng nhập với Google
+          </button>
 
-            <button className="w-full flex items-center justify-center px-4 py-3 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
-              <FaGithub className="w-5 h-5 mr-3 text-gray-900" />
-              Tiếp tục với GitHub
-            </button>
-          </div>
-
-          {/* Divider */}
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-300" />
-            </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-white text-gray-500">hoặc</span>
-            </div>
-          </div>
-
-          {/* General Error Message */}
           {errors.general && (
-            <div className="bg-red-50 border border-red-200 rounded-md p-3">
-              <div className="text-red-800 text-sm">{errors.general}</div>
+            <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-sm text-red-700">
+              {errors.general}
             </div>
           )}
 
-          {/* Login Form */}
           <form className="space-y-4" onSubmit={handleSubmit}>
-            {/* Email Field */}
             <div>
-              <label htmlFor="email" className="sr-only">
+              <label
+                htmlFor="email"
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
                 Email
               </label>
               <input
@@ -194,24 +221,34 @@ const Login = () => {
                 value={email}
                 onChange={(e) => handleEmailChange(e.target.value)}
                 onBlur={() => handleBlur("email")}
-                className={`relative block w-full px-3 py-4 border placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:z-10 text-sm ${
+                className={`block w-full px-3 py-2 border-2 rounded-lg text-sm transition-colors ${
                   errors.email && touched.email
-                    ? "border-red-300 focus:ring-red-500 focus:border-red-500"
-                    : "border-gray-300 focus:ring-teal-500 focus:border-teal-500"
+                    ? "border-red-300 focus:border-red-500 focus:ring-red-200"
+                    : "border-gray-300 focus:border-green-500 focus:ring-green-200"
                 }`}
-                placeholder="Email"
+                placeholder="you@example.com"
               />
               {errors.email && touched.email && (
-                <div className="text-red-600 text-sm mt-1">{errors.email}</div>
+                <div className="text-red-600 text-xs mt-1">{errors.email}</div>
               )}
             </div>
 
-            {/* Password Field */}
             <div>
-              <div className="relative">
-                <label htmlFor="password" className="sr-only">
+              <div className="flex items-center justify-between mb-1">
+                <label
+                  htmlFor="password"
+                  className="block text-sm font-medium text-gray-700"
+                >
                   Mật khẩu
                 </label>
+                <a
+                  href="#"
+                  className="text-xs text-green-700 hover:text-green-800"
+                >
+                  Quên mật khẩu?
+                </a>
+              </div>
+              <div className="relative">
                 <input
                   id="password"
                   name="password"
@@ -221,131 +258,51 @@ const Login = () => {
                   value={password}
                   onChange={(e) => handlePasswordChange(e.target.value)}
                   onBlur={() => handleBlur("password")}
-                  className={`relative block w-full px-3 py-4 pr-12 border placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:z-10 text-sm ${
+                  className={`block w-full px-3 py-2 pr-10 border-2 rounded-lg text-sm transition-colors ${
                     errors.password && touched.password
-                      ? "border-red-300 focus:ring-red-500 focus:border-red-500"
-                      : "border-gray-300 focus:ring-teal-500 focus:border-teal-500"
+                      ? "border-red-300 focus:border-red-500 focus:ring-red-200"
+                      : "border-gray-300 focus:border-green-500 focus:ring-green-200"
                   }`}
-                  placeholder="Mật khẩu"
+                  placeholder="••••••"
                 />
                 <button
                   type="button"
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center z-10 cursor-pointer"
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center"
                   onClick={() => setShowPassword(!showPassword)}
                   tabIndex={-1}
+                  aria-label={showPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
                 >
                   {showPassword ? (
-                    <HiEyeOff className="h-5 w-5 text-gray-400 hover:text-gray-600 transition-colors" />
+                    <HiEyeOff className="h-5 w-5 text-gray-400" />
                   ) : (
-                    <HiEye className="h-5 w-5 text-gray-400 hover:text-gray-600 transition-colors" />
+                    <HiEye className="h-5 w-5 text-gray-400" />
                   )}
                 </button>
               </div>
               {errors.password && touched.password && (
-                <div className="text-red-600 text-sm mt-1">
+                <div className="text-red-600 text-xs mt-1">
                   {errors.password}
                 </div>
               )}
             </div>
 
-            {/* Login Button */}
-            <div>
-              <button
-                type="submit"
-                disabled={isLoading || !email || !password}
-                className="group relative w-full flex justify-center py-4 px-4 border border-transparent text-sm font-bold rounded-md text-white bg-teal-600 hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              >
-                {isLoading ? (
-                  <div className="flex items-center">
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                    Đang đăng nhập...
-                  </div>
-                ) : (
-                  "Đăng nhập"
-                )}
-              </button>
-            </div>
-
-            {/* Forgot Password */}
-            <div className="text-center">
-              <a
-                href="#"
-                className="text-sm text-teal-600 hover:text-teal-500 hover:underline"
-              >
-                Quên mật khẩu?
-              </a>
-            </div>
+            <button
+              type="submit"
+              disabled={isLoading || !email || !password}
+              className="w-full py-2.5 px-4 text-sm font-semibold rounded-lg text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isLoading ? "Đang đăng nhập..." : "Đăng nhập"}
+            </button>
           </form>
 
-          {/* Sign Up Link */}
-          <div className="text-center">
-            <p className="text-sm text-gray-600">
-              Bạn chưa có tài khoản?{" "}
-              <a
-                href="/register"
-                className="font-medium text-teal-600 hover:text-teal-500 hover:underline"
-              >
-                Đăng ký
-              </a>
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {/* Right side - Image/Illustration */}
-      <div className="hidden lg:block lg:w-1/2 bg-gradient-to-br from-teal-600 to-teal-700">
-        <div className="h-full flex items-center justify-center p-12">
-          <div className="text-center text-white">
-            <div className="mb-8">
-              <img
-                src="/logo/studynest-logo-white-64.svg"
-                alt="StudyNest Logo"
-                className="w-20 h-20 mx-auto mb-6"
-              />
-              <h1 className="text-4xl font-bold mb-4">
-                Chào mừng trở lại StudyNest
-              </h1>
-              <p className="text-xl text-teal-100 mb-8">
-                Tiếp tục hành trình học tập của bạn
-              </p>
-            </div>
-
-            {/* Illustration or Features */}
-            <div className="space-y-6">
-              <div className="flex items-center space-x-4">
-                <div className="w-12 h-12 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
-                  <HiCheckCircle className="w-6 h-6 text-teal-600" />
-                </div>
-                <div className="text-left">
-                  <h3 className="font-semibold">Học tập linh hoạt</h3>
-                  <p className="text-teal-100 text-sm">Học mọi lúc, mọi nơi</p>
-                </div>
-              </div>
-
-              <div className="flex items-center space-x-4">
-                <div className="w-12 h-12 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
-                  <HiAcademicCap className="w-6 h-6 text-teal-600" />
-                </div>
-                <div className="text-left">
-                  <h3 className="font-semibold">Chứng chỉ chất lượng</h3>
-                  <p className="text-teal-100 text-sm">
-                    Được công nhận bởi ngành
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex items-center space-x-4">
-                <div className="w-12 h-12 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
-                  <HiUsers className="w-6 h-6 text-teal-600" />
-                </div>
-                <div className="text-left">
-                  <h3 className="font-semibold">Cộng đồng học tập</h3>
-                  <p className="text-teal-100 text-sm">
-                    Kết nối với learners khác
-                  </p>
-                </div>
-              </div>
-            </div>
+          <div className="text-center text-sm text-gray-600">
+            Chưa có tài khoản?{" "}
+            <a
+              href="/register"
+              className="text-green-700 hover:text-green-800 font-semibold"
+            >
+              Đăng ký
+            </a>
           </div>
         </div>
       </div>

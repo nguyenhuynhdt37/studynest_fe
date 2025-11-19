@@ -1,15 +1,23 @@
 export interface Subcategory {
-  id: number;
+  id: string;
   name: string;
   slug: string;
   order_index: number;
-  category_id: number;
+  category_id: string;
 }
 
 export interface Category {
-  id: number;
+  id: string;
   name: string;
   slug: string;
   order_index: number;
   subcategories: Subcategory[];
+}
+
+export interface LearningField {
+  id: string;
+  name: string;
+  description: string | null;
+  parent_id: string | null;
+  children: LearningField[]; // đệ quy
 }

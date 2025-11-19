@@ -1,0 +1,93 @@
+---
+alwaysApply: true
+---
+
+# StudyNest Project Rules
+
+> **Lưu ý**: Đọc thêm `.cursor/PROJECT.md` và `.cursor/ARCHITECTURE.md` để hiểu rõ cấu trúc dự án.
+
+## 1️⃣ Quy tắc chung
+
+- quy tắc quan trọng nhất: code làm sao mà dễ hiểu nhất có thể, phải siêu ngắn gọn, không code quá phức tạp, code theo dạng clean code ko lồng code quá nhiều, không props quá 3 phần từ, sử dụng taiwinss thuần, cái nào sử dụng thư viện thì cứ sử dụng
+
+Tuân thủ tuyệt đối cấu trúc & phong cách của dự án “Study”.
+
+Màu chủ đạo green (toàn hệ thống chỉ dùng green).
+
+Ngoại lệ: red cho xóa, yellow cho cảnh báo.
+
+Không dùng CSS thuần, chỉ TailwindCSS.
+
+Giao diện phải tối giản, dễ hiểu, UX/UI mượt mà, gọn gàng.
+
+Ưu tiên hiệu năng và khả năng bảo trì — code ngắn, dễ đọc, dễ hiểu, không “kiến trúc rối”.
+
+2️⃣ Về code
+
+Framework: Next.js (App Router) 16, React 19, TailwindCSS, shadcn/ui.
+
+luôn cập nhật công nghệ và rules mới cho Next.JS 16
+
+Không dùng i18n, redux, context nặng nề, hoặc cấu hình tailwind phức tạp.
+
+Mọi fetch API gọi trực tiếp trong component (client hoặc server component đều được).
+
+Không chia file API riêng trừ khi cần reuse nhiều lần.
+
+Không viết HOC, custom hook phức tạp, không wrapper vô nghĩa.
+
+3️⃣ UI/UX
+
+Giao diện phải nhẹ, sạch, dễ hiểu, phản hồi nhanh.
+
+Ưu tiên trải nghiệm người dùng thật (tối ưu tab, focus, hover, loading, skeleton).
+
+Mỗi component làm 1 nhiệm vụ duy nhất, đặt tên rõ ràng.
+
+Không lạm dụng animation.
+
+Responsive bắt buộc (mobile-first).
+
+4️⃣ Màu sắc & style
+
+Chủ đạo: #00bba7 (tự chọn tone phù hợp).
+
+Không thêm màu khác.
+
+Chỉ Tailwind, không thêm CSS riêng, không SCSS.
+
+5️⃣ Code rule
+
+Tên file: kebab-case.tsx.
+
+Component: PascalCase.
+
+Hook: useXxx.
+
+Không dùng any trừ khi thật cần.
+
+Luôn viết type rõ ràng (interface, type).
+
+Mỗi component ≤ 150 dòng.
+
+6️⃣ Hiệu năng
+
+Dùng server component mặc định, chỉ use client khi cần interactivity.
+
+Dùng React.Suspense hoặc loading skeleton khi fetch chậm.
+
+Giảm số render, không re-render vô lý.
+
+Không thêm thư viện nặng (moment, lodash, axios...). Dùng native fetch.
+
+7️⃣ Cấm tuyệt đối
+🚫 CSS thuần, SCSS, styled-components
+🚫 next-intl, i18n
+🚫 Redux, Recoil, Context lồng phức tạp
+🚫 Màu khác ngoài green/red/yellow
+🚫 Abstraction code khó đọc
+
+Tóm tắt:
+
+“Code phải đơn giản, xanh lá, dễ hiểu, hiệu năng cao.
+UI sạch, UX mượt, không màu mè, không cấu hình rối.”

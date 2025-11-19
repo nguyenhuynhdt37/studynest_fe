@@ -1,15 +1,17 @@
 "use client";
 
-import { validateOTP } from "@/lib/function/rules";
-import api from "@/lib/utils/ fetcher/client/axios";
-import { useSearchParams } from "next/navigation";
+import { validateOTP } from "@/lib/utils/validators";
+import api from "@/lib/utils/fetcher/client/axios";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { HiCheckCircle, HiMail, HiRefresh } from "react-icons/hi";
 
 const EmailAuthentication = () => {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const registered = searchParams.get("registered"); // "true"
   const email_register = searchParams.get("email"); // "nguyenhuynhtk37@gmail.com"
+  const redirectUrl = searchParams.get("redirect") || "/";
   // Email state - bạn có thể lấy từ context, state management, hoặc API
   const [email, setEmail] = useState("user@example.com");
   // OTP state
@@ -118,11 +120,22 @@ const EmailAuthentication = () => {
     setIsLoading(true);
 
     try {
+      await api.post("/auth/verify-email", {
+        email: email_register,
+        otp: otpString,
+      });
       setIsVerified(true);
-      // Bạn có thể thêm logic xử lý sau khi xác thực thành công ở đây
-      console.log("Email verified successfully!");
-    } catch (error) {
-      setOtpError("Mã xác thực không đúng. Vui lòng thử lại.");
+      // Redirect về URL được chỉ định hoặc về trang chủ sau khi xác thực thành công
+      setTimeout(() => {
+        router.push(redirectUrl);
+        router.refresh();
+      }, 1000);
+    } catch (error: any) {
+      if (error?.response?.status === 400 || error?.response?.status === 404) {
+        setOtpError("Mã xác thực không đúng. Vui lòng thử lại.");
+      } else {
+        setOtpError("Đã có lỗi xảy ra. Vui lòng thử lại sau.");
+      }
     } finally {
       setIsLoading(false);
     }
@@ -153,18 +166,6 @@ const EmailAuthentication = () => {
       }
       setCanResend(false);
     }
-
-    try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      // Bạn có thể thêm logic gửi lại mã ở đây
-      console.log("Resending verification code...");
-    } catch (error) {
-      setOtpError("Không thể gửi lại mã. Vui lòng thử lại.");
-      setCanResend(true);
-      setCountdown(0);
-    }
-
     // Focus first input
     inputRefs.current[0]?.focus();
   };

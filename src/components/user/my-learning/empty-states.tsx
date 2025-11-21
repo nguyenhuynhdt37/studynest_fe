@@ -16,31 +16,21 @@ export const CourseEmptyState = ({ content }: { content: EmptyStateContent }) =>
       <p className="text-lg font-semibold text-gray-900">{content.title}</p>
       <p className="text-sm text-gray-600">{content.description}</p>
     </div>
-    {content.actionHref && content.actionLabel ? (
+    {content.actionHref && content.actionLabel && (
       <a
         href={content.actionHref}
         className="rounded-lg bg-green-600 px-5 py-2 text-sm font-semibold text-white shadow transition hover:bg-green-700"
       >
         {content.actionLabel}
       </a>
-    ) : null}
+    )}
   </div>
 );
 
-export const CourseErrorState = ({
-  message,
-  onRetry,
-}: {
-  message: string;
-  onRetry: () => void;
-}) => (
+export const CourseErrorState = ({ message, onRetry }: { message: string; onRetry: () => void }) => (
   <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-red-200 bg-red-50 py-16 text-center">
-    <p className="text-lg font-semibold text-red-600">
-      Không thể tải danh sách khóa học
-    </p>
-    <p className="text-sm text-red-500">
-      {message || "Đã xảy ra lỗi khi tải danh sách khóa học."}
-    </p>
+    <p className="text-lg font-semibold text-red-600">Không thể tải danh sách khóa học</p>
+    <p className="text-sm text-red-500">{message}</p>
     <button
       type="button"
       onClick={onRetry}
@@ -50,6 +40,4 @@ export const CourseErrorState = ({
     </button>
   </div>
 );
-
-export type { EmptyStateContent };
 

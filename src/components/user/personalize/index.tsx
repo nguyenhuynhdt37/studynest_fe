@@ -1,22 +1,31 @@
 "use client";
 
 import api from "@/lib/utils/fetcher/client/axios";
-import { LearningField } from "@/types/user/category";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { HiSearch, HiX } from "react-icons/hi";
+
+interface Topic {
+  id: string;
+  name: string;
+  slug: string;
+}
+
+interface LearningField {
+  id: string;
+  name: string;
+  slug: string;
+  parent_id: string | null;
+  topics: Topic[];
+}
 
 interface personalizeProps {
   learningFields: LearningField[];
 }
 
 const Personalize = ({ learningFields }: personalizeProps) => {
-  console.log(learningFields);
-
   const [currentStep, setCurrentStep] = useState(0);
-  const [selectedField, setSelectedField] = useState<LearningField | null>(
-    null
-  );
+  const [selectedFields, setSelectedFields] = useState<LearningField[]>([]);
   const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [errors, setErrors] = useState<{
@@ -25,12 +34,32 @@ const Personalize = ({ learningFields }: personalizeProps) => {
   }>({});
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+
   const handleFieldSelect = (learningField: LearningField) => {
-    setSelectedField(learningField);
+    setSelectedFields((prev) => {
+      const isSelected = prev.some((f) => f.id === learningField.id);
+      const newSelection = isSelected
+        ? prev.filter((f) => f.id !== learningField.id)
+        : [...prev, learningField];
+
+      if (errors.field && newSelection.length > 0) {
+        setErrors((prevErrors) => ({ ...prevErrors, field: "" }));
+      }
+      return newSelection;
+    });
+
+    // Reset skills when fields change, or maybe keep them? 
+    // The original logic cleared skills on field select, but with multiple select 
+    // it might be annoying to clear everything if you just add one more field.
+    // However, to be safe and consistent with "refreshing" the available topics, 
+    // let's strictly follow the previous pattern or maybe just clear skills that are no longer relevant?
+    // For simplicity and to avoid stale skills from deselected fields, let's clear skills for now 
+    // OR better: filter out skills that don't belong to the new set of fields.
+    // Actually, the original code did `setSelectedSkills([])`. 
+    // Let's keep it simple: if they change fields, they might need to re-evaluate skills.
+    // But for better UX in multi-select, maybe we shouldn't clear ALL skills immediately.
+    // Let's just clear skills for now to ensure data consistency as per original behavior.
     setSelectedSkills([]);
-    if (errors.field) {
-      setErrors((prev) => ({ ...prev, field: "" }));
-    }
   };
 
   // Handle skill selection (checkbox style)
@@ -55,13 +84,16 @@ const Personalize = ({ learningFields }: personalizeProps) => {
 
   // Navigate between steps
   const handleNext = () => {
+    // Check if any field is selected and if it has topics (aggregating all topics)
+    const allTopics = selectedFields.flatMap(f => f.topics);
+
     if (
-      currentStep === 0 && selectedField
-        ? selectedField?.children?.length > 0
+      currentStep === 0 && selectedFields.length > 0
+        ? allTopics.length > 0
         : false
     ) {
-      if (!selectedField) {
-        setErrors({ field: "Vui lòng chọn lĩnh vực học tập" });
+      if (selectedFields.length === 0) {
+        setErrors({ field: "Vui lòng chọn ít nhất một lĩnh vực học tập" });
         return;
       }
       setCurrentStep(1);
@@ -79,7 +111,7 @@ const Personalize = ({ learningFields }: personalizeProps) => {
   // Validate current step
   const isCurrentStepValid = () => {
     if (currentStep === 0) {
-      return selectedField?.id !== -1;
+      return selectedFields.length > 0;
     }
     if (currentStep === 1) {
       return selectedSkills.length > 0;
@@ -89,37 +121,35 @@ const Personalize = ({ learningFields }: personalizeProps) => {
 
   // Handle form submission
   const handleSubmit = async () => {
-    if (!selectedField) {
-      setErrors({ field: "Vui lòng chọn lĩnh vực học tập" });
+    if (selectedFields.length === 0) {
+      setErrors({ field: "Vui lòng chọn ít nhất một lĩnh vực học tập" });
       return;
     }
-    if (selectedField?.children?.length > 0 && selectedSkills.length === 0) {
+
+    const allTopics = selectedFields.flatMap(f => f.topics);
+
+    if (allTopics.length > 0 && selectedSkills.length === 0) {
       setErrors({ skills: "Vui lòng chọn ít nhất một kỹ năng" });
       return;
     } else {
       let personalize = "";
+      const fieldNames = selectedFields.map(f => f.name).join(", ");
+
       if (selectedSkills.length > 0) {
-        selectedSkills.unshift(
-          "Lĩnh vực: " +
-            selectedField.name +
-            ". Kỹ năng: " +
-            selectedSkills.pop()
-        );
-        personalize = selectedSkills.join(", ");
+        const skillsCopy = [...selectedSkills];
+        personalize = `Lĩnh vực: ${fieldNames}. Kỹ năng: ${skillsCopy.join(", ")}.`;
       } else {
-        personalize = "Lĩnh vực: " + selectedField.name + ".";
+        personalize = `Lĩnh vực: ${fieldNames}.`;
       }
-      console.log(personalize);
 
       setIsLoading(true);
       try {
-        await api.post("/learning_fields/save", {
+        await api.post("/user_preferences", {
           preferences: personalize,
         });
         router.push("/");
       } catch (error: any) {
-        console.error("Error saving preferences:", error);
-        if (error?.status === 401) {
+        if (error?.response?.status === 401) {
           router.push("/auth/login?redirect=/personalize");
         }
       } finally {
@@ -128,6 +158,18 @@ const Personalize = ({ learningFields }: personalizeProps) => {
     }
   };
 
+  // Calculate progress
+  const progress = Math.round(
+    ((currentStep +
+      (currentStep === 0 && selectedFields.length > 0
+        ? 0.5
+        : currentStep === 1 && selectedSkills.length > 0
+          ? 0.5
+          : 0)) /
+      1) *
+    100
+  );
+
   return (
     <div className="min-h-screen bg-white">
       {/* Header */}
@@ -135,7 +177,7 @@ const Personalize = ({ learningFields }: personalizeProps) => {
         <div className="max-w-6xl mx-auto px-6 py-6 bg">
           <div className="flex items-center justify-center">
             {/* Logo */}
-            <div className="flex-shrink-0">
+            <div className="shrink-0">
               <a href="/" className="flex items-center space-x-3">
                 {/* Book Icon */}
                 <div className="relative">
@@ -153,7 +195,7 @@ const Personalize = ({ learningFields }: personalizeProps) => {
                     <span className="text-2xl font-black text-gray-900 tracking-wide">
                       STUDY
                     </span>
-                    <span className="text-2xl font-black text-teal-500 ml-0.5">
+                    <span className="text-2xl font-black text-green-600 ml-0.5">
                       NEST
                     </span>
                   </div>
@@ -172,33 +214,14 @@ const Personalize = ({ learningFields }: personalizeProps) => {
                 Bước {currentStep + 1} / {1}
               </span>
               <span>
-                {Math.round(
-                  ((currentStep +
-                    (currentStep === 0 && selectedField
-                      ? 0.5
-                      : currentStep === 1 && selectedSkills.length > 0
-                      ? 0.5
-                      : 0)) /
-                    1) *
-                    100
-                )}
-                %s
+                {progress}%
               </span>
             </div>
             <div className="w-full bg-gray-200 rounded-full h-2">
               <div
-                className="bg-gradient-to-r from-teal-500 to-teal-600 h-2 rounded-full transition-all duration-500 ease-out"
+                className="bg-green-600 h-2 rounded-full transition-all duration-500 ease-out"
                 style={{
-                  width: `${
-                    ((currentStep +
-                      (currentStep === 0 && selectedField
-                        ? 0.5
-                        : currentStep === 1 && selectedSkills.length > 0
-                        ? 0.5
-                        : 0)) /
-                      1) *
-                    100
-                  }%`,
+                  width: `${progress}%`,
                 }}
               ></div>
             </div>
@@ -209,7 +232,7 @@ const Personalize = ({ learningFields }: personalizeProps) => {
       {/* Warning Banner */}
       <div className="bg-orange-50 border-l-4 border-orange-400 p-4">
         <div className="max-w-6xl mx-auto flex">
-          <div className="flex-shrink-0">
+          <div className="shrink-0">
             <svg
               className="h-5 w-5 text-orange-400"
               viewBox="0 0 20 20"
@@ -246,45 +269,45 @@ const Personalize = ({ learningFields }: personalizeProps) => {
           {currentStep === 0 && (
             <div className="max-w-2xl mx-auto">
               <div className="grid grid-cols-1 sm:grid-cols-2  gap-3">
-                {learningFields.map((learningField) => (
-                  <label
-                    key={learningField.id}
-                    className={`group flex items-center p-5 rounded-xl cursor-pointer transition-all duration-200 hover:shadow-md ${
-                      selectedField?.id === learningField.id
-                        ? "bg-teal-50 border-2 border-teal-500 shadow-lg transform scale-[1.02]"
-                        : "bg-white border-2 border-gray-100 hover:border-teal-200 hover:bg-teal-50/30"
-                    }`}
-                  >
-                    <div
-                      className={`flex-shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${
-                        selectedField?.id === learningField.id
-                          ? "border-teal-500 bg-teal-500"
-                          : "border-gray-300 group-hover:border-teal-400"
-                      }`}
+                {learningFields.map((learningField) => {
+                  const isSelected = selectedFields.some(f => f.id === learningField.id);
+                  return (
+                    <label
+                      key={learningField.id}
+                      className={`group flex items-center p-5 rounded-xl cursor-pointer transition-all duration-200 hover:shadow-md ${isSelected
+                          ? "bg-green-50 border-2 border-green-500 shadow-lg transform scale-[1.02]"
+                          : "bg-white border-2 border-gray-100 hover:border-green-200 hover:bg-green-50/30"
+                        }`}
                     >
-                      {selectedField?.id === learningField.id && (
-                        <div className="w-2 h-2 bg-white rounded-full"></div>
-                      )}
-                    </div>
-                    <span
-                      className={`ml-4 text-lg font-medium transition-colors ${
-                        selectedField?.id === learningField.id
-                          ? "text-teal-900"
-                          : "text-gray-700 group-hover:text-teal-800"
-                      }`}
-                    >
-                      {learningField.name}
-                    </span>
-                    <input
-                      type="radio"
-                      name="field"
-                      value={learningField.id}
-                      checked={selectedField?.id === learningField.id}
-                      onChange={() => handleFieldSelect(learningField)}
-                      className="sr-only"
-                    />
-                  </label>
-                ))}
+                      <div
+                        className={`shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${isSelected
+                            ? "border-green-500 bg-green-500"
+                            : "border-gray-300 group-hover:border-green-400"
+                          }`}
+                      >
+                        {isSelected && (
+                          <div className="w-2 h-2 bg-white rounded-full"></div>
+                        )}
+                      </div>
+                      <span
+                        className={`ml-4 text-lg font-medium transition-colors ${isSelected
+                            ? "text-green-900"
+                            : "text-gray-700 group-hover:text-green-800"
+                          }`}
+                      >
+                        {learningField.name}
+                      </span>
+                      <input
+                        type="checkbox"
+                        name="field"
+                        value={learningField.id}
+                        checked={isSelected}
+                        onChange={() => handleFieldSelect(learningField)}
+                        className="sr-only"
+                      />
+                    </label>
+                  );
+                })}
               </div>
 
               {errors.field && (
@@ -331,7 +354,7 @@ const Personalize = ({ learningFields }: personalizeProps) => {
                     placeholder="Tìm kiếm một kỹ năng"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent shadow-sm hover:shadow-md transition-shadow"
+                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent shadow-sm hover:shadow-md transition-shadow"
                   />
                 </div>
               </div>
@@ -342,26 +365,30 @@ const Personalize = ({ learningFields }: personalizeProps) => {
                   Phổ biến với những học viên như bạn
                 </h3>
                 <div className="flex flex-wrap gap-3">
-                  {selectedField?.children
-                    .filter((skill) =>
-                      skill.name
+                  {selectedFields
+                    .flatMap(f => f.topics)
+                    .filter((topic, index, self) =>
+                      // Deduplicate topics by ID just in case, though usually they are distinct per field
+                      index === self.findIndex((t) => t.id === topic.id)
+                    )
+                    .filter((topic) =>
+                      topic.name
                         .toLowerCase()
                         .includes(searchTerm.toLowerCase())
                     )
-                    .map((skill) => {
-                      const isSelected = selectedSkills.includes(skill.name);
+                    .map((topic) => {
+                      const isSelected = selectedSkills.includes(topic.name);
                       return (
                         <button
-                          key={skill.id}
+                          key={topic.id}
                           type="button"
-                          onClick={() => handleSkillToggle(skill.name)}
-                          className={`px-4 py-2 rounded-full border text-sm font-medium transition-all hover:shadow-md ${
-                            isSelected
-                              ? "bg-teal-600 text-white border-teal-600 shadow-lg"
-                              : "bg-white text-gray-700 border-gray-300 hover:border-teal-400 hover:bg-teal-50"
-                          }`}
+                          onClick={() => handleSkillToggle(topic.name)}
+                          className={`px-4 py-2 rounded-full border text-sm font-medium transition-all hover:shadow-md ${isSelected
+                              ? "bg-green-600 text-white border-green-600 shadow-lg"
+                              : "bg-white text-gray-700 border-gray-300 hover:border-green-400 hover:bg-green-50"
+                            }`}
                         >
-                          + {skill.name}
+                          + {topic.name}
                         </button>
                       );
                     })}
@@ -382,7 +409,7 @@ const Personalize = ({ learningFields }: personalizeProps) => {
               <button
                 type="button"
                 onClick={handleBack}
-                className="px-6 py-3 text-teal-600 font-medium rounded-lg border border-teal-600 hover:bg-teal-50 transition-colors"
+                className="px-6 py-3 text-green-600 font-medium rounded-lg border border-green-600 hover:bg-green-50 transition-colors"
               >
                 Quay lại
               </button>
@@ -392,7 +419,7 @@ const Personalize = ({ learningFields }: personalizeProps) => {
               type="button"
               onClick={handleNext}
               disabled={!isCurrentStepValid() || isLoading}
-              className="px-8 py-3 bg-teal-600 text-white font-medium rounded-lg hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg hover:shadow-xl disabled:shadow-none"
+              className="px-8 py-3 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg hover:shadow-xl disabled:shadow-none"
             >
               {isLoading ? (
                 <div className="flex items-center">
@@ -400,7 +427,7 @@ const Personalize = ({ learningFields }: personalizeProps) => {
                   Đang xử lý...
                 </div>
               ) : currentStep === 1 ||
-                (currentStep === 0 && selectedField?.children?.length === 0) ? (
+                (currentStep === 0 && selectedFields.flatMap(f => f.topics).length === 0) ? (
                 "Hoàn thành"
               ) : (
                 "Tiếp theo"

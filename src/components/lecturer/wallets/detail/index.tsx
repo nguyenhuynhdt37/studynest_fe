@@ -251,7 +251,7 @@ export default function LecturerTransactionDetail({ transactionId }: Props) {
                     label="Khóa học"
                     value={
                       <Link
-                        href={`/courses/${data.course.slug}`}
+                        href={`/learning/${data.course.slug}`}
                         className="text-green-600 hover:text-green-700 font-medium"
                       >
                         {data.course.title}

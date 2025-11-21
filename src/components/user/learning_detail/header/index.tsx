@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import {
   HiChevronDown,
@@ -21,7 +22,7 @@ export default function LearningHeader({
   onOpenProgress,
 }: LearningHeaderProps) {
   const [showMoreOptions, setShowMoreOptions] = useState(false);
-
+  const router = useRouter();
   return (
     <div className="bg-white shadow-lg border-b border-teal-100 sticky top-0 z-30">
       <div className="px-6 py-4">
@@ -30,7 +31,10 @@ export default function LearningHeader({
           <div className="flex items-center space-x-4">
             {/* Logo */}
             <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-gradient-to-r from-teal-500 to-emerald-500 rounded-xl flex items-center justify-center">
+              <div
+                onClick={() => router.push("/")}
+                className="w-10 cursor-pointer h-10 bg-gradient-to-r from-teal-500 to-emerald-500 rounded-xl flex items-center justify-center"
+              >
                 <img
                   src="/logo/studynest-logo.svg"
                   alt="StudyNest Logo"
@@ -58,7 +62,9 @@ export default function LearningHeader({
             <div className="w-px h-8 bg-gray-200"></div>
 
             {/* Course Title */}
-            <h1 className="text-lg font-semibold text-gray-900">{courseTitle}</h1>
+            <h1 className="text-lg font-semibold text-gray-900">
+              {courseTitle}
+            </h1>
           </div>
 
           {/* Right Side */}
@@ -140,4 +146,3 @@ export default function LearningHeader({
     </div>
   );
 }
-

@@ -1,11 +1,16 @@
 "use client";
 
+import ContextMenu from "@/components/shared/context-menu";
 import api from "@/lib/utils/fetcher/client/axios";
+import { getGoogleDriveImageUrl } from "@/lib/utils/helpers/image";
+import { showToast } from "@/lib/utils/helpers/toast";
 import type {
   AdminLecturerOption,
   AdminWithdrawResponse,
 } from "@/types/admin/withdraw";
-import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
+import { HiEye } from "react-icons/hi";
 import useSWR from "swr";
 
 const formatCurrency = (val: number) =>
@@ -33,7 +38,9 @@ const getStatusLabel = (status: string) => {
     pending: "Đang chờ",
     approved: "Đã duyệt",
     rejected: "Đã từ chối",
-    paid: "Đã thanh toán",
+    payout_pending: "Đang chờ PayPal thanh toán",
+    failed: "PayPal thanh toán thất bại",
+    paid: "Đã rút tiền thành công",
   };
   return labels[status] || status;
 };
@@ -43,12 +50,15 @@ const getStatusClass = (status: string) => {
     pending: "bg-yellow-100 text-yellow-700 border-yellow-300",
     approved: "bg-green-100 text-green-700 border-green-200",
     rejected: "bg-red-100 text-red-700 border-red-200",
-    paid: "bg-blue-100 text-blue-700 border-blue-200",
+    payout_pending: "bg-yellow-100 text-yellow-700 border-yellow-300",
+    failed: "bg-red-100 text-red-700 border-red-200",
+    paid: "bg-green-100 text-green-700 border-green-200",
   };
   return classes[status] || "bg-gray-100 text-gray-700 border-gray-200";
 };
 
 export default function AdminWithdraws() {
+  const router = useRouter();
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
   const [status, setStatus] = useState<string>("all");
@@ -57,6 +67,18 @@ export default function AdminWithdraws() {
   const [orderBy, setOrderBy] = useState("requested_at");
   const [orderDir, setOrderDir] = useState<"asc" | "desc">("desc");
   const [lecturerSearch, setLecturerSearch] = useState("");
+  const [showLecturerDropdown, setShowLecturerDropdown] = useState(false);
+  const lecturerDropdownRef = useRef<HTMLDivElement>(null);
+  const [batchAction, setBatchAction] = useState<"approve" | "reject" | null>(
+    null
+  );
+  const [batchReason, setBatchReason] = useState("");
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [menuPos, setMenuPos] = useState<{ x: number; y: number }>({
+    x: 0,
+    y: 0,
+  });
+  const [menuItem, setMenuItem] = useState<{ id: string } | null>(null);
 
   const buildQuery = () => {
     const params = new URLSearchParams();
@@ -70,7 +92,7 @@ export default function AdminWithdraws() {
     return params.toString();
   };
 
-  const { data, error, isLoading } = useSWR<AdminWithdrawResponse>(
+  const { data, error, isLoading, mutate } = useSWR<AdminWithdrawResponse>(
     `/admin/withdraw?${buildQuery()}`,
     async (url) => {
       const res = await api.get(url);
@@ -81,12 +103,9 @@ export default function AdminWithdraws() {
     }
   );
 
+  const searchQuery = lecturerSearch.trim() || "";
   const { data: lecturerOptions } = useSWR<AdminLecturerOption[]>(
-    lecturerSearch.trim()
-      ? `/admin/withdraw/withdraw/lecturers/search?q=${encodeURIComponent(
-          lecturerSearch.trim()
-        )}`
-      : null,
+    `/admin/withdraw/lecturers?q=${encodeURIComponent(searchQuery)}`,
     async (url) => {
       const res = await api.get(url);
       return res.data;
@@ -96,7 +115,84 @@ export default function AdminWithdraws() {
     }
   );
 
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (
+        lecturerDropdownRef.current &&
+        !lecturerDropdownRef.current.contains(e.target as Node)
+      ) {
+        setShowLecturerDropdown(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const openContextMenu = (e: React.MouseEvent, item: { id: string }) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setMenuItem(item);
+    setMenuPos({ x: e.clientX, y: e.clientY });
+    setMenuOpen(true);
+  };
+
+  useEffect(() => {
+    if (!menuOpen) return;
+    const close = () => setMenuOpen(false);
+    document.addEventListener("click", close);
+    document.addEventListener("contextmenu", close);
+    return () => {
+      document.removeEventListener("click", close);
+      document.removeEventListener("contextmenu", close);
+    };
+  }, [menuOpen]);
+
   const totalPages = data ? Math.max(1, Math.ceil(data.total / limit)) : 1;
+
+  const pendingItems = data?.items.filter((item) => item.status === "pending");
+  const hasPending = pendingItems && pendingItems.length > 0;
+  const pendingForLecturer =
+    lecturerId &&
+    pendingItems?.filter((item) => item.lecturer_id === lecturerId);
+  const hasPendingForLecturer =
+    lecturerId && pendingForLecturer && pendingForLecturer.length > 0;
+
+  const handleBatchAction = async (action: "approve" | "reject") => {
+    if (action === "reject" && !batchReason.trim()) {
+      showToast.error("Vui lòng nhập lý do từ chối");
+      return;
+    }
+    try {
+      const payload: any = {
+        approve: action === "approve",
+        all_pending: true,
+      };
+      if (lecturerId) {
+        payload.lecturer_id = lecturerId;
+      }
+      if (action === "reject" && batchReason.trim()) {
+        payload.reason = batchReason.trim();
+      }
+      await api.post(`/admin/withdraw/approve_deny`, payload);
+      mutate();
+      showToast.success(
+        action === "approve"
+          ? `Đã duyệt tất cả yêu cầu${lecturerId ? " của giảng viên này" : ""}`
+          : `Đã từ chối tất cả yêu cầu${
+              lecturerId ? " của giảng viên này" : ""
+            }`
+      );
+      setBatchAction(null);
+      setBatchReason("");
+      router.refresh();
+    } catch (error: any) {
+      showToast.error(
+        error?.response?.data?.message ||
+          error?.response?.data?.detail ||
+          "Không thể xử lý yêu cầu"
+      );
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 py-8 px-4">
@@ -130,41 +226,59 @@ export default function AdminWithdraws() {
                 className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 flex-1 min-w-[200px]"
               />
 
-              <div className="relative">
+              <div className="relative" ref={lecturerDropdownRef}>
                 <input
                   type="text"
                   value={lecturerSearch}
                   onChange={(e) => {
                     setLecturerSearch(e.target.value);
+                    setShowLecturerDropdown(true);
                     if (!e.target.value) setLecturerId("");
                   }}
+                  onFocus={() => setShowLecturerDropdown(true)}
                   placeholder="Tìm giảng viên..."
                   className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 w-64"
                 />
-                {lecturerOptions && lecturerOptions.length > 0 && (
-                  <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-                    {lecturerOptions.map((lecturer) => (
-                      <button
-                        key={lecturer.id}
-                        onClick={() => {
-                          setLecturerId(lecturer.id);
-                          setLecturerSearch(lecturer.fullname);
-                          setPage(1);
-                        }}
-                        className="w-full px-4 py-2 text-left hover:bg-gray-50 flex items-center gap-3"
-                      >
-                        <div>
-                          <div className="font-medium text-gray-900">
-                            {lecturer.fullname}
+                {showLecturerDropdown &&
+                  lecturerOptions &&
+                  lecturerOptions.length > 0 && (
+                    <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                      {lecturerOptions.map((lecturer) => (
+                        <button
+                          key={lecturer.id}
+                          onClick={() => {
+                            setLecturerId(lecturer.id);
+                            setLecturerSearch(lecturer.fullname);
+                            setShowLecturerDropdown(false);
+                            setPage(1);
+                          }}
+                          className="w-full px-4 py-2 text-left hover:bg-gray-50 flex items-center gap-3"
+                        >
+                          {lecturer.avatar ? (
+                            <img
+                              src={getGoogleDriveImageUrl(lecturer.avatar)}
+                              alt={lecturer.fullname}
+                              className="w-10 h-10 rounded-full object-cover shrink-0"
+                            />
+                          ) : (
+                            <div className="w-10 h-10 rounded-full bg-gray-200 shrink-0 flex items-center justify-center">
+                              <span className="text-gray-500 text-xs font-medium">
+                                {lecturer.fullname[0]?.toUpperCase()}
+                              </span>
+                            </div>
+                          )}
+                          <div>
+                            <div className="font-medium text-gray-900">
+                              {lecturer.fullname}
+                            </div>
+                            <div className="text-sm text-gray-500">
+                              {lecturer.email}
+                            </div>
                           </div>
-                          <div className="text-sm text-gray-500">
-                            {lecturer.email}
-                          </div>
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-                )}
+                        </button>
+                      ))}
+                    </div>
+                  )}
               </div>
 
               <select
@@ -179,7 +293,11 @@ export default function AdminWithdraws() {
                 <option value="pending">Đang chờ</option>
                 <option value="approved">Đã duyệt</option>
                 <option value="rejected">Đã từ chối</option>
-                <option value="paid">Đã thanh toán</option>
+                <option value="payout_pending">
+                  Đang chờ PayPal thanh toán
+                </option>
+                <option value="failed">PayPal thanh toán thất bại</option>
+                <option value="paid">Đã rút tiền thành công</option>
               </select>
 
               <select
@@ -229,37 +347,119 @@ export default function AdminWithdraws() {
               </button>
             </div>
 
-            {(lecturerId || search) && (
-              <div className="flex items-center gap-2 flex-wrap">
-                {lecturerId && (
-                  <span className="px-3 py-1 bg-green-100 text-green-700 rounded-lg text-sm font-medium">
-                    Giảng viên: {lecturerSearch || "Đã chọn"}
-                    <button
-                      onClick={() => {
-                        setLecturerId("");
-                        setLecturerSearch("");
-                        setPage(1);
-                      }}
-                      className="ml-2 hover:text-green-900"
-                    >
-                      ×
-                    </button>
-                  </span>
+            <div className="flex items-center justify-between flex-wrap gap-4">
+              {(lecturerId || search) && (
+                <div className="flex items-center gap-2 flex-wrap">
+                  {lecturerId && (
+                    <span className="px-3 py-1 bg-green-100 text-green-700 rounded-lg text-sm font-medium">
+                      Giảng viên: {lecturerSearch || "Đã chọn"}
+                      <button
+                        onClick={() => {
+                          setLecturerId("");
+                          setLecturerSearch("");
+                          setPage(1);
+                        }}
+                        className="ml-2 hover:text-green-900"
+                      >
+                        ×
+                      </button>
+                    </span>
+                  )}
+                  {search && (
+                    <span className="px-3 py-1 bg-green-100 text-green-700 rounded-lg text-sm font-medium">
+                      Tìm kiếm: {search}
+                      <button
+                        onClick={() => {
+                          setSearch("");
+                          setPage(1);
+                        }}
+                        className="ml-2 hover:text-green-900"
+                      >
+                        ×
+                      </button>
+                    </span>
+                  )}
+                </div>
+              )}
+
+              {hasPending && status === "pending" && (
+                <div className="flex gap-2">
+                  {hasPendingForLecturer ? (
+                    <>
+                      <button
+                        onClick={() => setBatchAction("approve")}
+                        className="px-4 py-2 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 text-sm"
+                      >
+                        Duyệt tất cả của GV
+                      </button>
+                      <button
+                        onClick={() => setBatchAction("reject")}
+                        className="px-4 py-2 border border-red-200 text-red-600 rounded-lg font-semibold hover:bg-red-50 text-sm"
+                      >
+                        Từ chối tất cả của GV
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <button
+                        onClick={() => setBatchAction("approve")}
+                        className="px-4 py-2 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 text-sm"
+                      >
+                        Duyệt tất cả
+                      </button>
+                      <button
+                        onClick={() => setBatchAction("reject")}
+                        className="px-4 py-2 border border-red-200 text-red-600 rounded-lg font-semibold hover:bg-red-50 text-sm"
+                      >
+                        Từ chối tất cả
+                      </button>
+                    </>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {batchAction && (
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                <div className="mb-3">
+                  <p className="font-semibold text-gray-900 mb-1">
+                    {batchAction === "approve"
+                      ? `Xác nhận duyệt tất cả yêu cầu${
+                          lecturerId ? " của giảng viên này" : ""
+                        }?`
+                      : `Xác nhận từ chối tất cả yêu cầu${
+                          lecturerId ? " của giảng viên này" : ""
+                        }?`}
+                  </p>
+                  <p className="text-sm text-red-600 font-medium">
+                    ⚠️ Hành động này không thể hoàn tác
+                  </p>
+                </div>
+                {batchAction === "reject" && (
+                  <textarea
+                    value={batchReason}
+                    onChange={(e) => setBatchReason(e.target.value)}
+                    placeholder="Nhập lý do từ chối (bắt buộc)..."
+                    className="w-full min-h-[100px] rounded-lg border border-yellow-300 focus:border-green-500 focus:ring-2 focus:ring-green-200 text-sm p-3 mb-3"
+                  />
                 )}
-                {search && (
-                  <span className="px-3 py-1 bg-green-100 text-green-700 rounded-lg text-sm font-medium">
-                    Tìm kiếm: {search}
-                    <button
-                      onClick={() => {
-                        setSearch("");
-                        setPage(1);
-                      }}
-                      className="ml-2 hover:text-green-900"
-                    >
-                      ×
-                    </button>
-                  </span>
-                )}
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => {
+                      setBatchAction(null);
+                      setBatchReason("");
+                    }}
+                    className="px-4 py-2 border border-gray-300 rounded-lg font-semibold hover:bg-gray-50 text-sm"
+                  >
+                    Hủy
+                  </button>
+                  <button
+                    onClick={() => handleBatchAction(batchAction)}
+                    className="px-4 py-2 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 text-sm"
+                  >
+                    Xác nhận
+                  </button>
+                </div>
               </div>
             )}
           </div>
@@ -291,18 +491,28 @@ export default function AdminWithdraws() {
                       <th className="px-4 py-3 text-left text-xs font-semibold uppercase text-gray-600">
                         Thời gian yêu cầu
                       </th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase text-gray-600">
+                        Hành động
+                      </th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100 bg-white">
                     {data?.items.map((item) => (
-                      <tr key={item.id} className="hover:bg-gray-50">
+                      <tr
+                        key={item.id}
+                        onClick={() =>
+                          router.push(`/admin/withdraws/${item.id}`)
+                        }
+                        onContextMenu={(e) => openContextMenu(e, item)}
+                        className="hover:bg-gray-50 cursor-pointer"
+                      >
                         <td className="px-4 py-4">
                           <div className="flex items-center gap-3">
                             {item.avatar && (
                               <img
-                                src={item.avatar}
+                                src={getGoogleDriveImageUrl(item.avatar)}
                                 alt={item.fullname}
-                                className="w-10 h-10 rounded-full object-cover"
+                                className="w-10 h-10 rounded-full object-cover shrink-0"
                               />
                             )}
                             <div>
@@ -333,6 +543,22 @@ export default function AdminWithdraws() {
                           <div className="text-sm text-gray-900">
                             {formatDateTime(item.requested_at)}
                           </div>
+                        </td>
+                        <td
+                          className="px-4 py-4"
+                          onClick={(e) => e.stopPropagation()}
+                          onContextMenu={(e) => e.stopPropagation()}
+                        >
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              router.push(`/admin/withdraws/${item.id}`);
+                            }}
+                            className="inline-flex items-center gap-2 px-3 py-1.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-medium"
+                          >
+                            <HiEye className="h-4 w-4" />
+                            Xem chi tiết
+                          </button>
                         </td>
                       </tr>
                     ))}
@@ -431,6 +657,24 @@ export default function AdminWithdraws() {
           )}
         </div>
       </div>
+
+      {/* Context Menu */}
+      {menuOpen && menuItem && (
+        <ContextMenu
+          x={menuPos.x}
+          y={menuPos.y}
+          onClose={() => setMenuOpen(false)}
+          items={[
+            {
+              label: "Xem chi tiết",
+              onClick: () => {
+                router.push(`/admin/withdraws/${menuItem.id}`);
+                setMenuOpen(false);
+              },
+            },
+          ]}
+        />
+      )}
     </div>
   );
 }

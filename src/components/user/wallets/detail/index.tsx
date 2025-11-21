@@ -56,10 +56,10 @@ const getStatusLabel = (status: string) => {
 
 const getStatusClass = (status: string) => {
   const classes: Record<string, string> = {
-  completed: "bg-green-100 text-green-700 border-green-200",
+    completed: "bg-green-100 text-green-700 border-green-200",
     approved: "bg-green-100 text-green-700 border-green-200",
-  pending: "bg-yellow-100 text-yellow-700 border-yellow-300",
-  canceled: "bg-red-100 text-red-700 border-red-200",
+    pending: "bg-yellow-100 text-yellow-700 border-yellow-300",
+    canceled: "bg-red-100 text-red-700 border-red-200",
     rejected: "bg-red-100 text-red-700 border-red-200",
   };
   return classes[status] || "bg-gray-100 text-gray-700 border-gray-200";
@@ -109,7 +109,9 @@ export default function UserTransactionDetail({ transactionId }: Props) {
           <div className="bg-white rounded-xl shadow-lg p-6">
             <div className="text-center py-12">
               <div className="w-8 h-8 border-2 border-green-600 border-t-transparent rounded-full animate-spin mx-auto"></div>
-              <p className="mt-4 text-gray-600">Đang tải chi tiết giao dịch...</p>
+              <p className="mt-4 text-gray-600">
+                Đang tải chi tiết giao dịch...
+              </p>
             </div>
           </div>
         </div>
@@ -148,7 +150,7 @@ export default function UserTransactionDetail({ transactionId }: Props) {
         <Link
           href="/wallets"
           className="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900"
-          >
+        >
           <HiArrowLeft className="w-5 h-5" />
           <span>Quay lại danh sách giao dịch</span>
         </Link>
@@ -163,19 +165,19 @@ export default function UserTransactionDetail({ transactionId }: Props) {
             >
               {getStatusLabel(data.status)}
             </span>
-        </div>
+          </div>
 
           <div className="p-4 bg-gray-50 rounded-lg">
-              <div className="text-sm text-gray-600 mb-1">Số tiền</div>
-              <div
-                className={`text-3xl font-bold ${
+            <div className="text-sm text-gray-600 mb-1">Số tiền</div>
+            <div
+              className={`text-3xl font-bold ${
                 isIncome ? "text-green-600" : "text-gray-900"
-                }`}
-              >
-                {isIncome ? "+" : "-"}
-                {formatCurrency(data.amount)}
+              }`}
+            >
+              {isIncome ? "+" : "-"}
+              {formatCurrency(data.amount)}
+            </div>
           </div>
-        </div>
 
           <div className="space-y-1">
             <DetailRow label="Mã giao dịch" value={data.id} />
@@ -183,25 +185,25 @@ export default function UserTransactionDetail({ transactionId }: Props) {
             <DetailRow label="Phương thức" value={data.method || "—"} />
             <DetailRow label="Cổng thanh toán" value={data.gateway || "—"} />
             <DetailRow label="Mô tả" value={data.description || "—"} />
-                {data.transaction_code && (
-                  <DetailRow
+            {data.transaction_code && (
+              <DetailRow
                 label="Mã giao dịch hệ thống"
-                    value={data.transaction_code}
-                  />
-                )}
-                {data.order_id && (
+                value={data.transaction_code}
+              />
+            )}
+            {data.order_id && (
               <DetailRow label="Mã đơn hàng" value={data.order_id} />
-                )}
-                <DetailRow
-                  label="Thời gian tạo"
-                  value={formatDateTime(data.created_at)}
-                />
-                {data.confirmed_at && (
-                  <DetailRow
-                    label="Thời gian xác nhận"
-                    value={formatDateTime(data.confirmed_at)}
-                  />
-                )}
+            )}
+            <DetailRow
+              label="Thời gian tạo"
+              value={formatDateTime(data.created_at)}
+            />
+            {data.confirmed_at && (
+              <DetailRow
+                label="Thời gian xác nhận"
+                value={formatDateTime(data.confirmed_at)}
+              />
+            )}
           </div>
 
           {data.deposit && (
@@ -223,33 +225,33 @@ export default function UserTransactionDetail({ transactionId }: Props) {
             </div>
           )}
 
-            {data.purchase && (
+          {data.purchase && (
             <div className="pt-4 border-t border-gray-200">
-                <h2 className="text-lg font-bold text-gray-900 mb-4">
+              <h2 className="text-lg font-bold text-gray-900 mb-4">
                 Thông tin mua khóa học
-                </h2>
+              </h2>
               <div className="space-y-1">
+                <DetailRow
+                  label="Giá gốc"
+                  value={formatCurrency(data.purchase.original_price)}
+                />
+                <DetailRow
+                  label="Giá sau giảm"
+                  value={formatCurrency(data.purchase.discounted_price)}
+                />
+                {data.purchase.discount_amount > 0 && (
                   <DetailRow
-                    label="Giá gốc"
-                    value={formatCurrency(data.purchase.original_price)}
+                    label="Số tiền giảm"
+                    value={formatCurrency(data.purchase.discount_amount)}
                   />
-                  <DetailRow
-                    label="Giá sau giảm"
-                    value={formatCurrency(data.purchase.discounted_price)}
-                  />
-                  {data.purchase.discount_amount > 0 && (
-                    <DetailRow
-                      label="Số tiền giảm"
-                      value={formatCurrency(data.purchase.discount_amount)}
-                    />
-                  )}
+                )}
                 <DetailRow label="Trạng thái" value={data.purchase.status} />
                 {data.course && (
                   <DetailRow
                     label="Khóa học"
                     value={
                       <Link
-                        href={`/courses/${data.course.slug}`}
+                        href={`/learning/${data.course.slug}`}
                         className="text-green-600 hover:text-green-700 font-medium"
                       >
                         {data.course.title}
@@ -262,7 +264,7 @@ export default function UserTransactionDetail({ transactionId }: Props) {
                     label="Mã giảm giá"
                     value={`${data.discount.code} (${data.discount.type})`}
                   />
-            )}
+                )}
                 {data.refund_request && (
                   <DetailRow
                     label="Yêu cầu hoàn tiền"
@@ -293,26 +295,26 @@ export default function UserTransactionDetail({ transactionId }: Props) {
                   value={formatCurrency(data.income.amount_platform)}
                 />
                 {data.income.hold_until && (
-                    <DetailRow
-                      label="Giữ đến"
+                  <DetailRow
+                    label="Giữ đến"
                     value={formatDateTime(data.income.hold_until)}
-                    />
-                  )}
+                  />
+                )}
                 {data.income.available_at && (
-                    <DetailRow
-                      label="Có sẵn từ"
+                  <DetailRow
+                    label="Có sẵn từ"
                     value={formatDateTime(data.income.available_at)}
-                    />
-                  )}
+                  />
+                )}
                 {data.income.paid_at && (
-                    <DetailRow
+                  <DetailRow
                     label="Đã thanh toán lúc"
                     value={formatDateTime(data.income.paid_at)}
-                    />
-                  )}
-                </div>
+                  />
+                )}
               </div>
-            )}
+            </div>
+          )}
 
           {data.refund && (
             <div className="pt-4 border-t border-gray-200">
@@ -338,48 +340,48 @@ export default function UserTransactionDetail({ transactionId }: Props) {
 
           {data.withdraw && (
             <div className="pt-4 border-t border-gray-200">
-                <h2 className="text-lg font-bold text-gray-900 mb-4">
+              <h2 className="text-lg font-bold text-gray-900 mb-4">
                 Thông tin rút tiền
-                </h2>
+              </h2>
               <div className="space-y-1">
-                  <DetailRow
+                <DetailRow
                   label="Mã yêu cầu"
                   value={data.withdraw.withdrawal_id}
-                  />
-                  <DetailRow
-                    label="Trạng thái"
-                    value={
-                      <span
+                />
+                <DetailRow
+                  label="Trạng thái"
+                  value={
+                    <span
                       className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold ${getStatusClass(
                         data.withdraw.status
                       )}`}
-                      >
+                    >
                       {getStatusLabel(data.withdraw.status)}
-                      </span>
-                    }
-                  />
-                  <DetailRow
+                    </span>
+                  }
+                />
+                <DetailRow
                   label="Số tiền"
                   value={formatCurrency(data.withdraw.amount)}
-                  />
-                    <DetailRow
+                />
+                <DetailRow
                   label="Thời gian yêu cầu"
                   value={formatDateTime(data.withdraw.requested_at)}
-                    />
+                />
                 {data.withdraw.approved_at && (
-                    <DetailRow
+                  <DetailRow
                     label="Thời gian duyệt"
                     value={formatDateTime(data.withdraw.approved_at)}
-                    />
-                  )}
+                  />
+                )}
                 {data.withdraw.rejected_at && (
-                    <DetailRow
+                  <DetailRow
                     label="Thời gian từ chối"
                     value={formatDateTime(data.withdraw.rejected_at)}
-                    />
-                  )}
-                </div>
+                  />
+                )}
               </div>
+            </div>
           )}
         </div>
       </div>

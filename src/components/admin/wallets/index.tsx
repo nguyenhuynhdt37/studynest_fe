@@ -3,11 +3,13 @@
 import ContextMenu from "@/components/shared/context-menu";
 import { PlatformWalletOverview } from "@/types/admin/wallet";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   HiArrowDown,
   HiArrowUp,
   HiClock,
   HiCurrencyDollar,
+  HiEye,
   HiTag,
 } from "react-icons/hi";
 
@@ -56,6 +58,7 @@ const getHistoryTypeColor = (type: string, amount: number) => {
 };
 
 export default function AdminWallets({ data }: AdminWalletsProps) {
+  const router = useRouter();
   const { wallet, recent_history } = data;
   const [menuOpen, setMenuOpen] = useState(false);
   const [menuPos, setMenuPos] = useState<{ x: number; y: number }>({
@@ -65,11 +68,12 @@ export default function AdminWallets({ data }: AdminWalletsProps) {
   const [menuHistoryId, setMenuHistoryId] = useState<string | null>(null);
   const [menuHistoryTxn, setMenuHistoryTxn] = useState<string | null>(null);
   const openContextMenu = (
-    e: MouseEvent,
+    e: React.MouseEvent,
     historyId: string,
     relatedTxn?: string | null
   ) => {
     e.preventDefault();
+    e.stopPropagation();
     setMenuHistoryId(historyId);
     setMenuHistoryTxn(relatedTxn || null);
     setMenuPos({ x: e.clientX, y: e.clientY });
@@ -203,11 +207,20 @@ export default function AdminWallets({ data }: AdminWalletsProps) {
 
       {/* Recent History */}
       <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
-        <div className="px-6 py-4 border-b border-gray-200">
-          <h2 className="text-xl font-bold text-gray-900">
-            Lịch sử giao dịch gần đây
-          </h2>
-          <p className="text-sm text-gray-600 mt-1">Top 5 giao dịch mới nhất</p>
+        <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+          <div>
+            <h2 className="text-xl font-bold text-gray-900">
+              Lịch sử giao dịch gần đây
+            </h2>
+            <p className="text-sm text-gray-600 mt-1">Top 5 giao dịch mới nhất</p>
+          </div>
+          <button
+            onClick={() => router.push("/admin/wallets/transactions")}
+            className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-semibold text-sm flex items-center gap-2"
+          >
+            <HiEye className="h-4 w-4" />
+            Xem tất cả giao dịch
+          </button>
         </div>
 
         {recent_history.length === 0 ? (
@@ -235,19 +248,21 @@ export default function AdminWallets({ data }: AdminWalletsProps) {
                   <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-600">
                     Thời gian
                   </th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-600">
+                    Hành động
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
                 {recent_history.map((history) => (
                   <tr
                     key={history.id}
-                    className="hover:bg-gray-50 transition-colors"
+                    className="hover:bg-gray-50 transition-colors cursor-pointer"
+                    onClick={() =>
+                      router.push(`/admin/wallets/transactions/${history.id}`)
+                    }
                     onContextMenu={(e) =>
-                      openContextMenu(
-                        e as unknown as MouseEvent,
-                        history.id,
-                        history.related_transaction_id
-                      )
+                      openContextMenu(e, history.id, history.related_transaction_id)
                     }
                   >
                     <td className="px-6 py-4">
@@ -296,39 +311,25 @@ export default function AdminWallets({ data }: AdminWalletsProps) {
                       )}
                     </td>
                     <td className="px-6 py-4">
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm text-gray-600">
-                          {formatDateTime(history.created_at)}
-                        </span>
-                        <button
-                          type="button"
-                          className="p-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors sm:hidden"
-                          title="Thao tác"
-                          onClick={(e) => {
-                            const rect = (
-                              e.currentTarget as HTMLElement
-                            ).getBoundingClientRect();
-                            setMenuHistoryId(history.id);
-                            setMenuHistoryTxn(
-                              history.related_transaction_id || null
-                            );
-                            setMenuPos({
-                              x: rect.left + rect.width / 2,
-                              y: rect.bottom + 8,
-                            });
-                            setMenuOpen(true);
-                          }}
-                        >
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            viewBox="0 0 20 20"
-                            fill="currentColor"
-                            className="w-5 h-5"
-                          >
-                            <path d="M10 4a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 20a2 2 0 110-4 2 2 0 010 4z" />
-                          </svg>
-                        </button>
-                      </div>
+                      <span className="text-sm text-gray-600">
+                        {formatDateTime(history.created_at)}
+                      </span>
+                    </td>
+                    <td
+                      className="px-6 py-4"
+                      onClick={(e) => e.stopPropagation()}
+                      onContextMenu={(e) => e.stopPropagation()}
+                    >
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          router.push(`/admin/wallets/transactions/${history.id}`);
+                        }}
+                        className="inline-flex items-center gap-2 px-3 py-1.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-medium"
+                      >
+                        <HiEye className="h-4 w-4" />
+                        Xem chi tiết
+                      </button>
                     </td>
                   </tr>
                 ))}
@@ -339,12 +340,19 @@ export default function AdminWallets({ data }: AdminWalletsProps) {
       </div>
 
       {/* Context Menu */}
-      {menuOpen && (
+      {menuOpen && menuHistoryId && (
         <ContextMenu
           x={menuPos.x}
           y={menuPos.y}
           onClose={() => setMenuOpen(false)}
           items={[
+            {
+              label: "Xem chi tiết",
+              onClick: () => {
+                router.push(`/admin/wallets/transactions/${menuHistoryId}`);
+                setMenuOpen(false);
+              },
+            },
             ...(menuHistoryTxn
               ? [
                   {
@@ -356,17 +364,13 @@ export default function AdminWallets({ data }: AdminWalletsProps) {
                   },
                 ]
               : []),
-            ...(menuHistoryId
-              ? [
-                  {
-                    label: "Sao chép History ID",
-                    onClick: () => {
-                      navigator.clipboard.writeText(menuHistoryId as string);
-                      setMenuOpen(false);
-                    },
-                  },
-                ]
-              : []),
+            {
+              label: "Sao chép History ID",
+              onClick: () => {
+                navigator.clipboard.writeText(menuHistoryId as string);
+                setMenuOpen(false);
+              },
+            },
           ]}
         />
       )}

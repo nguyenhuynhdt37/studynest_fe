@@ -6,10 +6,9 @@ import type { CoursesMeItem, CoursesMeVariant } from "@/types/user/courses-me";
 import Link from "next/link";
 import { HiOutlineStar } from "react-icons/hi";
 
-const fallbackThumbnail =
-  "https://placehold.co/600x400/0fbba7/FFFFFF?text=Study+Course";
+const FALLBACK_THUMBNAIL = "https://placehold.co/600x400/0fbba7/FFFFFF?text=Study+Course";
 
-const levelLabels: Record<string, string> = {
+const LEVEL_LABELS: Record<string, string> = {
   beginner: "Cơ bản",
   intermediate: "Trung cấp",
   advanced: "Nâng cao",
@@ -22,15 +21,12 @@ type CourseCardProps = {
 
 export const CourseCard = ({ course, variant }: CourseCardProps) => {
   const progress = Math.round(course.progress_percent || 0);
-  const level = levelLabels[course.level] || "Không xác định";
-  const thumbnailSrc = getGoogleDriveImageUrl(
-    course.thumbnail_url || fallbackThumbnail
-  );
-  const href = `/learning/${course.slug}`;
+  const levelLabel = LEVEL_LABELS[course.level] || "Không xác định";
+  const thumbnailSrc = getGoogleDriveImageUrl(course.thumbnail_url || FALLBACK_THUMBNAIL);
 
   return (
     <Link
-      href={href}
+      href={`/learning/${course.slug}`}
       className="group block h-full focus:outline-none focus-visible:ring-2 focus-visible:ring-green-300 focus-visible:ring-offset-2"
     >
       <article className="flex h-full flex-col overflow-hidden rounded-2xl border border-green-200 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-lg">
@@ -42,7 +38,7 @@ export const CourseCard = ({ course, variant }: CourseCardProps) => {
             className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
           />
           <span className="absolute left-4 top-4 rounded-full bg-white/90 px-3 py-1 text-xs font-medium uppercase tracking-wide text-green-600 shadow-sm">
-            {level}
+            {levelLabel}
           </span>
         </div>
 
@@ -55,39 +51,32 @@ export const CourseCard = ({ course, variant }: CourseCardProps) => {
               <span className="inline-flex items-center gap-1">
                 <HiOutlineStar className="h-4 w-4 text-amber-400" />
                 {course.rating_avg.toFixed(1)}
-                <span className="text-xs text-gray-400">
-                  ({course.review_count})
-                </span>
+                <span className="text-xs text-gray-400">({course.review_count})</span>
               </span>
               <span aria-hidden="true">•</span>
               <span>{formatDuration(course.total_length_seconds)}</span>
             </div>
           </header>
 
-          {variant === "purchased" ? (
+          {variant === "purchased" && (
             <div className="flex items-center justify-between rounded-xl bg-green-50 p-3">
               <div className="space-y-1">
-                <p className="text-xs font-medium uppercase text-green-600">
-                  Tiến độ
-                </p>
-                <p className="text-sm font-semibold text-gray-700">
-                  {progress}%
-                </p>
+                <p className="text-xs font-medium uppercase text-green-600">Tiến độ</p>
+                <p className="text-sm font-semibold text-gray-700">{progress}%</p>
               </div>
-              <div className="relative h-2 flex-1 rounded-full bg-green-100 ml-3">
+              <div className="relative ml-3 h-2 flex-1 rounded-full bg-green-100">
                 <span
                   className="absolute left-0 top-0 h-full rounded-full bg-gradient-to-r from-green-500 to-emerald-500 transition-all"
                   style={{ width: `${progress}%` }}
                 />
               </div>
             </div>
-          ) : null}
+          )}
 
           <footer className="mt-auto flex items-center justify-between text-xs text-gray-500">
             <span>Ngôn ngữ: {course.language?.toUpperCase() || "N/A"}</span>
             <span>
-              {variant === "purchased" ? "Đăng ký" : "Đã lưu"}:{" "}
-              {formatDate(course.created_at)}
+              {variant === "purchased" ? "Đăng ký" : "Đã lưu"}: {formatDate(course.created_at)}
             </span>
           </footer>
         </div>

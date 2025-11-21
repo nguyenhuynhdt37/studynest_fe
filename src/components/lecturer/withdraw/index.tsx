@@ -1,6 +1,7 @@
 "use client";
 
 import api from "@/lib/utils/fetcher/client/axios";
+import { getGoogleDriveImageUrl } from "@/lib/utils/helpers/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -51,7 +52,9 @@ const getStatusLabel = (status: string) => {
     pending: "Đang chờ",
     approved: "Đã duyệt",
     rejected: "Đã từ chối",
-    paid: "Đã thanh toán",
+    payout_pending: "Đang chờ PayPal thanh toán",
+    failed: "PayPal thanh toán thất bại",
+    paid: "Đã rút tiền thành công",
   };
   return labels[status] || status;
 };
@@ -61,7 +64,9 @@ const getStatusClass = (status: string) => {
     pending: "bg-yellow-100 text-yellow-700 border-yellow-300",
     approved: "bg-green-100 text-green-700 border-green-200",
     rejected: "bg-red-100 text-red-700 border-red-200",
-    paid: "bg-blue-100 text-blue-700 border-blue-200",
+    payout_pending: "bg-yellow-100 text-yellow-700 border-yellow-300",
+    failed: "bg-red-100 text-red-700 border-red-200",
+    paid: "bg-green-100 text-green-700 border-green-200",
   };
   return classes[status] || "bg-gray-100 text-gray-700 border-gray-200";
 };
@@ -137,7 +142,9 @@ export default function WithdrawPage() {
               <option value="pending">Đang chờ</option>
               <option value="approved">Đã duyệt</option>
               <option value="rejected">Đã từ chối</option>
-              <option value="paid">Đã thanh toán</option>
+              <option value="payout_pending">Đang chờ PayPal thanh toán</option>
+              <option value="failed">PayPal thanh toán thất bại</option>
+              <option value="paid">Đã rút tiền thành công</option>
             </select>
 
             <select
@@ -203,6 +210,9 @@ export default function WithdrawPage() {
                   <thead className="bg-gray-50">
                     <tr>
                       <th className="px-4 py-3 text-left text-xs font-semibold uppercase text-gray-600">
+                        Avatar
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase text-gray-600">
                         Thời gian
                       </th>
                       <th className="px-4 py-3 text-left text-xs font-semibold uppercase text-gray-600">
@@ -216,6 +226,21 @@ export default function WithdrawPage() {
                   <tbody className="divide-y divide-gray-100 bg-white">
                     {data?.items.map((item) => (
                       <tr key={item.id} className="hover:bg-gray-50">
+                        <td className="px-4 py-4">
+                          <div className="flex items-center">
+                            <img
+                              src={
+                                item.avatar
+                                  ? getGoogleDriveImageUrl(item.avatar)
+                                  : "https://ui-avatars.com/api/?name=" +
+                                    encodeURIComponent(item.fullname) +
+                                    "&background=00bba7&color=fff"
+                              }
+                              alt={item.fullname}
+                              className="w-10 h-10 rounded-full object-cover"
+                            />
+                          </div>
+                        </td>
                         <td className="px-4 py-4">
                           <div className="text-sm text-gray-900">
                             {formatDateTime(item.requested_at)}

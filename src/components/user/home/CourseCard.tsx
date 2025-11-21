@@ -140,24 +140,31 @@ const CourseCard = ({
 
   return (
     <div
-      className="group relative bg-white border border-green-100 rounded-xl hover:shadow-xl hover:shadow-green-100/50 hover:border-green-300 transition-all duration-300 overflow-hidden flex flex-col"
+      className="group relative bg-white border border-gray-100 rounded-xl hover:shadow-lg hover:shadow-green-50/50 hover:border-green-200 transition-all duration-300 overflow-hidden flex flex-col h-full"
       onMouseEnter={() => handleEnter(course.id)}
       onMouseLeave={handleLeave}
       ref={cardRef}
     >
-      <div className="relative overflow-hidden rounded-t-xl">
+      <div className="relative overflow-hidden">
         <img
           src={getGoogleDriveImageUrl(course.image || "")}
           alt={course.title}
-          className="w-full h-40 object-cover group-hover:scale-105 transition-transform duration-300"
+          className="w-full h-44 object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
+          onError={(e) => {
+            (
+              e.target as HTMLImageElement
+            ).src = `https://via.placeholder.com/400x300/00bba7/ffffff?text=${encodeURIComponent(
+              course.title
+            )}`;
+          }}
         />
-        {/* Gradient overlay */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+        {/* Subtle gradient overlay */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
       </div>
 
-      <div className="p-4 flex flex-col flex-grow">
+      <div className="p-5 flex flex-col flex-grow">
         <h3
-          className={`text-sm font-semibold text-gray-900 mb-1 line-clamp-2 cursor-pointer hover:text-green-600 transition-colors duration-150 ${
+          className={`text-[15px] font-semibold text-gray-900 mb-3 line-clamp-2 cursor-pointer hover:text-green-600 transition-colors duration-200 leading-relaxed ${
             isCheckingEnrollment ? "opacity-50 cursor-wait" : ""
           }`}
           onClick={() =>
@@ -166,30 +173,51 @@ const CourseCard = ({
         >
           {course.title}
           {isCheckingEnrollment && (
-            <span className="ml-2 text-xs text-gray-500">Đang kiểm tra...</span>
+            <span className="ml-2 text-xs text-gray-400 font-normal">
+              Đang kiểm tra...
+            </span>
           )}
         </h3>
+
         {course.instructor && (
-          <p className="text-xs text-gray-600 mb-2">{course.instructor}</p>
+          <div className="flex items-center gap-2 mb-4">
+            {(course as any).instructorAvatar && (
+              <img
+                src={getGoogleDriveImageUrl((course as any).instructorAvatar)}
+                alt={course.instructor}
+                className="w-7 h-7 rounded-full object-cover ring-1 ring-gray-200"
+                onError={(e) => {
+                  (
+                    e.target as HTMLImageElement
+                  ).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                    course.instructor || ""
+                  )}&background=00bba7&color=fff&size=28`;
+                }}
+              />
+            )}
+            <p className="text-xs text-gray-600 font-medium">
+              {course.instructor}
+            </p>
+          </div>
         )}
 
         {Array.isArray((course as any).tags) &&
           (course as any).tags.length > 0 && (
-            <div className="flex flex-wrap gap-1 mb-4">
+            <div className="flex flex-wrap gap-1.5 mb-4">
               {(course as any).tags.map((tag: string, i: number) => (
                 <span
                   key={i}
                   className={`${
                     tag === "bán chạy nhất"
-                      ? "bg-gradient-to-r from-yellow-100 to-amber-100 text-yellow-800 border border-yellow-200"
+                      ? "bg-yellow-50 text-yellow-700 border border-yellow-200"
                       : tag === "thịnh hành"
-                      ? "bg-gradient-to-r from-emerald-100 to-teal-100 text-emerald-800 border border-emerald-200"
+                      ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
                       : tag === "được yêu thích"
-                      ? "bg-gradient-to-r from-green-100 to-emerald-100 text-green-800 border border-green-200"
+                      ? "bg-green-50 text-green-700 border border-green-200"
                       : tag === "mới ra mắt"
-                      ? "bg-gradient-to-r from-green-100 to-green-200 text-green-800 border border-green-300"
-                      : "bg-gray-100 text-gray-700 border border-gray-200"
-                  } px-2 py-0.5 rounded-md text-[10px] font-semibold`}
+                      ? "bg-green-50 text-green-700 border border-green-200"
+                      : "bg-gray-50 text-gray-600 border border-gray-200"
+                  } px-2.5 py-1 rounded-md text-[11px] font-medium`}
                 >
                   {tag}
                 </span>
@@ -200,39 +228,23 @@ const CourseCard = ({
         {/* Spacer */}
         <div className="flex-grow"></div>
 
-        {/* Rating and Price */}
-        <div className="pt-2 border-t border-gray-100 mt-2">
-          <div className="flex items-center mb-2">
-            <div className="flex items-center">
-              <span className="text-yellow-400 text-sm">★</span>
-              <span className="text-sm font-semibold text-gray-900 ml-1">
-                {course.rating ?? 0}
-              </span>
-              <span className="text-xs text-gray-500 ml-2">
-                ({(course.students || 0).toLocaleString("en-US")})
-              </span>
-            </div>
-          </div>
-
-          {course.price !== null && course.price !== undefined ? (
-            <div className="flex items-center space-x-2">
-              <span className="text-lg font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
+        {/* Price */}
+        {course.price !== null && course.price !== undefined && (
+          <div className="pt-3 border-t border-gray-100">
+            <div className="flex items-baseline gap-2">
+              <span className="text-xl font-bold text-green-600">
                 {course.price === 0
                   ? "Miễn phí"
                   : `${Number(course.price).toLocaleString("en-US")}đ`}
               </span>
               {typeof (course as any).originalPrice === "number" && (
-                <span className="text-sm text-gray-400 line-through">
+                <span className="text-sm text-gray-400 line-through font-normal">
                   {(course as any).originalPrice.toLocaleString("en-US")}đ
                 </span>
               )}
             </div>
-          ) : (
-            <div className="text-sm text-emerald-600 font-medium">
-              {course.students?.toLocaleString("en-US")} học viên đăng ký
-            </div>
-          )}
-        </div>
+          </div>
+        )}
       </div>
 
       {showPreview &&
@@ -279,40 +291,32 @@ const CourseCard = ({
                     {previewCache[course.id]?.title || course.title}
                   </div>
                   {course.instructor && (
-                    <div className="text-xs text-emerald-600 mt-1 line-clamp-1 font-medium">
-                      {course.instructor}
+                    <div className="flex items-center gap-2 mt-1">
+                      {(course as any).instructorAvatar && (
+                        <img
+                          src={getGoogleDriveImageUrl(
+                            (course as any).instructorAvatar
+                          )}
+                          alt={course.instructor}
+                          className="w-5 h-5 rounded-full object-cover"
+                          onError={(e) => {
+                            (
+                              e.target as HTMLImageElement
+                            ).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                              course.instructor || ""
+                            )}&background=00bba7&color=fff&size=20`;
+                          }}
+                        />
+                      )}
+                      <div className="text-xs text-emerald-600 line-clamp-1 font-medium">
+                        {course.instructor}
+                      </div>
                     </div>
                   )}
                 </div>
               </div>
 
               <div className="space-y-2 mb-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-1.5 bg-gradient-to-r from-green-50 to-emerald-50 px-3 py-1.5 rounded-lg border border-green-200">
-                    <span className="text-yellow-500 text-base">★</span>
-                    <span className="font-bold text-gray-900">
-                      {(previewCache[course.id]?.rating ?? course.rating ?? 0)
-                        .toFixed
-                        ? (
-                            previewCache[course.id]?.rating ??
-                            course.rating ??
-                            0
-                          ).toFixed(1)
-                        : previewCache[course.id]?.rating ?? course.rating ?? 0}
-                    </span>
-                    <span className="text-gray-500">
-                      ({previewCache[course.id]?.rating_count ?? 0})
-                    </span>
-                  </div>
-                  <div className="text-sm font-semibold text-emerald-600">
-                    {(
-                      previewCache[course.id]?.total_enrolls ??
-                      course.students ??
-                      0
-                    ).toLocaleString("en-US")}{" "}
-                    học viên
-                  </div>
-                </div>
                 <div className="flex items-center justify-between text-xs text-gray-500">
                   <div>
                     <span className="font-medium text-gray-600">Cập nhật:</span>{" "}
@@ -361,22 +365,7 @@ const CourseCard = ({
                 </div>
               )}
 
-              <div className="mt-3 pt-3 border-t border-green-100 flex items-center justify-between">
-                <div className="flex items-center gap-3 text-xs">
-                  <div className="flex items-center gap-1 text-gray-600">
-                    <span className="text-yellow-500">⭐</span>
-                    <span className="font-semibold">
-                      {previewCache[course.id]?.rating ?? course.rating ?? 0}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-1 text-gray-600">
-                    <span>👁️</span>
-                    <span className="font-semibold">
-                      {previewCache[course.id]?.views?.toLocaleString?.() ||
-                        "--"}
-                    </span>
-                  </div>
-                </div>
+              <div className="mt-3 pt-3 border-t border-green-100 flex items-center justify-end">
                 <div className="text-xs font-bold text-green-600">
                   Xem chi tiết →
                 </div>

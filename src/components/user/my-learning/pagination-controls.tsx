@@ -1,9 +1,6 @@
 "use client";
 
-import {
-  HiOutlineArrowNarrowLeft,
-  HiOutlineArrowNarrowRight,
-} from "react-icons/hi";
+import { HiOutlineArrowNarrowLeft, HiOutlineArrowNarrowRight } from "react-icons/hi";
 
 type PaginationProps = {
   page: number;
@@ -14,18 +11,9 @@ type PaginationProps = {
   isBusy: boolean;
 };
 
-export const PaginationControls = ({
-  page,
-  totalPages,
-  visibleRangeLabel,
-  onPrev,
-  onNext,
-  isBusy,
-}: PaginationProps) => (
+export const PaginationControls = ({ page, totalPages, visibleRangeLabel, onPrev, onNext, isBusy }: PaginationProps) => (
   <footer className="flex flex-col gap-4 border-t border-green-200 pt-4 md:flex-row md:items-center md:justify-between">
-    <span className="text-sm font-medium text-gray-600">
-      {visibleRangeLabel}
-    </span>
+    <span className="text-sm font-medium text-gray-600">{visibleRangeLabel}</span>
 
     <div className="flex items-center gap-3">
       <button

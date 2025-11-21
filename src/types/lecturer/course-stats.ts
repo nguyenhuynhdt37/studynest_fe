@@ -38,5 +38,3 @@ export interface LecturerTimelineResponse {
   enroll_timeline: TimelinePoint[];
   activity_timeline: TimelinePoint[];
 }
-
-

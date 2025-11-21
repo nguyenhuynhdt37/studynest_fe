@@ -1,37 +1,39 @@
-"use client";
+import { getServerCookie } from "@/lib/utils/fetcher/server/cookieStore";
+import { fetcher } from "@/lib/utils/fetcher/server/fetcher";
+import { NotificationWS } from "@/provider/notification-ws";
+import { InitRealtimeNoti } from "@/provider/NotificationHydrator";
+import { NotificationsResponse } from "@/types/user/notification";
+import { cookies } from "next/headers";
+import { ReactNode, Suspense } from "react";
+import { AdminLayoutClient } from "./layout-client";
 
-import Header from "@/components/admin/header";
-import Sidebar from "@/components/admin/siderbar";
-import React, { useState } from "react";
-
-export default function AdminLayout({
+export default async function AdminLayout({
   children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
-  const [isCollapsed, setIsCollapsed] = useState(false);
+}: {
+  children: ReactNode;
+}) {
+  const stores = await cookies();
+  const accessToken = getServerCookie(stores, "access_token");
+  let notifications: NotificationsResponse | null = null;
 
-  const toggleSidebar = () => {
-    setIsCollapsed(!isCollapsed);
-  };
+  if (accessToken) {
+    const res_getNotifications = await fetcher(
+      "/notifications/admin?page=1&limit=20&sort_by=created_at&order_dir=desc",
+      stores
+    );
+
+    if (res_getNotifications.ok) {
+      notifications = await res_getNotifications.json();
+    }
+  }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Sidebar */}
-      <Sidebar isCollapsed={isCollapsed} onToggle={toggleSidebar} />
-
-      {/* Header */}
-      <Header isCollapsed={isCollapsed} />
-
-      {/* Main Content */}
-      <main
-        className={`
-        pt-16 transition-all duration-300
-        ${isCollapsed ? "ml-16" : "ml-64"}
-      `}
-      >
-        <div className="p-4 lg:p-6">{children}</div>
-      </main>
-    </div>
+    <>
+      <InitRealtimeNoti role="ADMIN" notifications={notifications} />
+      <Suspense fallback={null}>
+        <NotificationWS role_name="ADMIN" accessToken={accessToken || null} />
+      </Suspense>
+      <AdminLayoutClient>{children}</AdminLayoutClient>
+    </>
   );
 }

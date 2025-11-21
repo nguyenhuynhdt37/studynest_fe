@@ -98,10 +98,10 @@ export default function AdminRefundDetail({ data }: AdminRefundDetailProps) {
   const [avatarError, setAvatarError] = useState(false);
 
   const statusInfo = statusMeta[data.refund.status];
-  // Admin có thể xử lý khi: requested, instructor_approved, hoặc instructor_rejected
+  // Admin chỉ xử lý khi: requested (chờ từ người dùng) hoặc instructor_rejected (giảng viên từ chối)
+  // Nếu giảng viên đã chấp thuận (instructor_approved), admin không thể sửa nữa
   const canRespond =
     data.refund.status === "requested" ||
-    data.refund.status === "instructor_approved" ||
     data.refund.status === "instructor_rejected";
 
   const courseThumbnail = data.course.thumbnail

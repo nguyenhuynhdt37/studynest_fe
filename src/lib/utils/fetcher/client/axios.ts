@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const backendUrl =
-  process.env.NEXT_PUBLIC_URL_BACKEND || "http://localhost:8000";
+  process.env.NEXT_PUBLIC_URL_BACKEND || "http://127.0.0.1:8000";
 const api = axios.create({
   baseURL: `${backendUrl}/api/v1`, // 👈 gọi relative URL, nhờ rewrites sẽ proxy tới backend
   headers: {

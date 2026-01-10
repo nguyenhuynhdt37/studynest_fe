@@ -15,6 +15,7 @@ interface RealtimeNotiState {
   init: (role: string, userId: string) => void;
   hydrate: (role: string, items: Notification[], unread: number) => void;
   add: (role: string, noti: Notification) => void;
+  markAsRead: (role: string, id: string) => void;
   markAllRead: (role: string) => void;
   clearAll: () => void; // khi logout
 }
@@ -102,16 +103,43 @@ export const useRealtimeNotiStore = create<RealtimeNotiState>((set, get) => ({
     });
   },
 
-  markAllRead: (role) => {
+  markAsRead: (role, id) => {
     const state = get();
     const bucket = state.buckets[role];
     if (!bucket) return;
+
+    const updatedTop10 = bucket.top10.map((n) =>
+      n.id === id ? { ...n, is_read: true } : n
+    );
+
+    const newUnread = Math.max(0, bucket.unread - 1);
 
     set({
       buckets: {
         ...state.buckets,
         [role]: {
-          ...bucket,
+          top10: updatedTop10,
+          unread: newUnread,
+        },
+      },
+    });
+  },
+
+  markAllRead: (role) => {
+    const state = get();
+    const bucket = state.buckets[role];
+    if (!bucket) return;
+
+    const updatedTop10 = bucket.top10.map((n) => ({
+      ...n,
+      is_read: true,
+    }));
+
+    set({
+      buckets: {
+        ...state.buckets,
+        [role]: {
+          top10: updatedTop10,
           unread: 0,
         },
       },

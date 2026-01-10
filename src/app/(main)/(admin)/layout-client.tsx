@@ -4,11 +4,7 @@ import Header from "@/components/admin/header";
 import Sidebar from "@/components/admin/siderbar";
 import { useState } from "react";
 
-export function AdminLayoutClient({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export function AdminLayoutClient({ children }: { children: React.ReactNode }) {
   const [isCollapsed, setIsCollapsed] = useState(false);
 
   const toggleSidebar = () => {
@@ -34,4 +30,3 @@ export function AdminLayoutClient({
     </div>
   );
 }
-

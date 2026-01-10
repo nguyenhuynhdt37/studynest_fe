@@ -27,6 +27,8 @@ const CoursesCarousel = memo(
           ? "bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50"
           : section === "featured"
           ? "bg-gradient-to-br from-green-50 to-emerald-50"
+          : section === "recommended"
+          ? "bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50"
           : "bg-white",
       [section]
     );
@@ -51,6 +53,10 @@ const CoursesCarousel = memo(
         )),
       [itemsPerPage, section]
     );
+
+    if (!isLoadingFeeds && (!items || items.length === 0)) {
+      return null;
+    }
 
     return (
       <section className={`py-16 ${containerBg} relative overflow-hidden`}>
@@ -86,6 +92,12 @@ const CoursesCarousel = memo(
                 <p className="text-emerald-600 font-medium flex items-center gap-2">
                   <span className="text-green-500">🔥</span>
                   Khám phá lựa chọn bán chạy
+                </p>
+              )}
+              {section === "recommended" && (
+                <p className="text-emerald-600 font-medium flex items-center gap-2">
+                  <span className="text-green-500">🎯</span>
+                  Dựa trên sở thích và hành vi học tập của bạn
                 </p>
               )}
             </div>

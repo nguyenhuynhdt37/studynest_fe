@@ -1,5 +1,6 @@
 "use client";
 
+import api from "@/lib/utils/fetcher/client/axios";
 import { useRealtimeNotiStore } from "@/stores/notifications";
 import { Notification } from "@/types/user/notification";
 import Link from "next/link";
@@ -12,6 +13,7 @@ export function NotificationButton({ role }: { role: string }) {
   const [isOpen, setIsOpen] = useState(false);
   const popupRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
+  const markAsRead = useRealtimeNotiStore((s) => s.markAsRead);
 
   const bucket = useRealtimeNotiStore((s) => s.buckets[role]);
   const top10 = bucket?.top10 ?? [];
@@ -65,8 +67,17 @@ export function NotificationButton({ role }: { role: string }) {
     return labels[type] || type;
   };
 
-  const handleNotificationClick = (notification: Notification) => {
+  const handleNotificationClick = async (notification: Notification) => {
     setIsOpen(false);
+
+    if (!notification.is_read) {
+      try {
+        await api.post(`/notifications/read/${notification.id}`);
+        markAsRead(role, notification.id);
+      } catch (error) {
+        console.error("Failed to mark notification as read:", error);
+      }
+    }
 
     if (notification.url && notification.action === "open_url") {
       router.push(notification.url);

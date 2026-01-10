@@ -7,7 +7,8 @@ import { useRealtimeNotiStore } from "@/stores/notifications";
 import { useUserStore } from "@/stores/user";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { HiBell, HiSearch } from "react-icons/hi";
+import { HiSearch } from "react-icons/hi";
+import { NotificationButton } from "./notification";
 
 interface HeaderProps {
   isCollapsed: boolean;
@@ -18,9 +19,7 @@ export default function Header({ isCollapsed }: HeaderProps) {
   const user = useUserStore((s) => s.user);
   const clearUser = useUserStore((s) => s.clearUser);
   const clearNotifications = useRealtimeNotiStore((s) => s.clearAll);
-  const [showNotifications, setShowNotifications] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const notificationsRef = useRef<HTMLDivElement>(null);
   const userMenuRef = useRef<HTMLDivElement>(null);
 
   // Get user initials
@@ -50,60 +49,7 @@ export default function Header({ isCollapsed }: HeaderProps) {
 
   const handleNavigation = (path: string) => {
     router.push(path);
-    setShowNotifications(false);
   };
-
-  // Close dropdowns when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        notificationsRef.current &&
-        !notificationsRef.current.contains(event.target as Node)
-      ) {
-        setShowNotifications(false);
-      }
-      if (
-        userMenuRef.current &&
-        !userMenuRef.current.contains(event.target as Node)
-      ) {
-        // User menu is now hover-based, so we don't need to close it
-      }
-    };
-
-    if (showNotifications) {
-      document.addEventListener("mousedown", handleClickOutside);
-    }
-
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [showNotifications]);
-
-  const notifications = [
-    {
-      id: 1,
-      title: "Người dùng mới đăng ký",
-      message: "John Doe vừa tham gia nền tảng",
-      time: "2 phút trước",
-      unread: true,
-    },
-    {
-      id: 2,
-      title: "Hoàn thành khóa học",
-      message: 'Sarah đã hoàn thành "React Fundamentals"',
-      time: "15 phút trước",
-      unread: true,
-    },
-    {
-      id: 3,
-      title: "Nhận thanh toán",
-      message: "Nhận thanh toán từ Mike",
-      time: "1 giờ trước",
-      unread: false,
-    },
-  ];
-
-  const unreadCount = notifications.filter((n) => n.unread).length;
   // Context menus
   const [menuOpen, setMenuOpen] = useState(false);
   const [menuPos, setMenuPos] = useState<{ x: number; y: number }>({
@@ -160,67 +106,8 @@ export default function Header({ isCollapsed }: HeaderProps) {
         {/* Right Side Actions */}
         <div className="flex items-center gap-3">
           {/* Notifications */}
-          <div className="relative" ref={notificationsRef}>
-            <button
-              type="button"
-              onClick={() => {
-                setShowNotifications(!showNotifications);
-              }}
-              onContextMenu={(e) => openMenu(e, "bell")}
-              className="relative p-2 rounded-lg hover:bg-green-50 transition-colors"
-            >
-              <HiBell className="w-5 h-5 text-gray-600" />
-              {unreadCount > 0 && (
-                <span className="absolute top-0 right-0 bg-green-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                  {unreadCount}
-                </span>
-              )}
-            </button>
-
-            {/* Notifications Dropdown */}
-            {showNotifications && (
-              <div className="absolute right-0 top-full mt-2 w-80 bg-white border-2 border-green-100 rounded-xl shadow-2xl z-50">
-                <div className="p-4 border-b-2 border-green-100 bg-gradient-to-r from-green-50 to-emerald-50">
-                  <h3 className="font-semibold text-gray-900 flex items-center justify-between">
-                    <span>Thông báo</span>
-                    {unreadCount > 0 && (
-                      <span className="bg-green-600 text-white text-xs px-2 py-1 rounded-full">
-                        {unreadCount} mới
-                      </span>
-                    )}
-                  </h3>
-                </div>
-                <div className="max-h-96 overflow-y-auto">
-                  {notifications.map((notification) => (
-                    <div
-                      key={notification.id}
-                      className={`p-4 border-b border-gray-100 hover:bg-green-50 cursor-pointer transition-colors ${
-                        notification.unread ? "bg-green-50" : ""
-                      }`}
-                    >
-                      <p className="font-medium text-gray-900 text-sm">
-                        {notification.title}
-                      </p>
-                      <p className="text-gray-600 text-sm mt-1">
-                        {notification.message}
-                      </p>
-                      <p className="text-gray-400 text-xs mt-1">
-                        {notification.time}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-                <div className="p-4 border-t-2 border-green-100">
-                  <button
-                    type="button"
-                    onClick={() => handleNavigation("/admin/notifications")}
-                    className="w-full text-center text-green-600 hover:text-green-700 font-medium text-sm transition-colors"
-                  >
-                    Xem tất cả thông báo
-                  </button>
-                </div>
-              </div>
-            )}
+          <div onContextMenu={(e) => openMenu(e, "bell")}>
+            <NotificationButton role="ADMIN" />
           </div>
 
           {/* User Menu */}
@@ -427,7 +314,7 @@ export default function Header({ isCollapsed }: HeaderProps) {
                     {
                       label: "Xem tất cả thông báo",
                       onClick: () => {
-                        setShowNotifications(true);
+                        handleNavigation("/admin/notifications");
                         setMenuOpen(false);
                       },
                     },

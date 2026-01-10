@@ -1,15 +1,13 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
-  HiAcademicCap,
   HiCurrencyDollar,
   HiPlay,
-  HiSparkles,
   HiUsers,
   HiVideoCamera,
 } from "react-icons/hi";
+import { BecomeLecturerAction } from "./become";
 
 const LecturerWelcome = () => {
   const router = useRouter();
@@ -19,15 +17,15 @@ const LecturerWelcome = () => {
       {/* Main Content */}
       <main className="flex-grow">
         {/* Hero Section */}
-        <section className="relative min-h-[90vh] bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 overflow-hidden">
+        <section className="relative min-h-[90vh] bg-gradient-to-br from-[#00a73d]/5 via-white to-[#00a73d]/10 overflow-hidden">
           {/* Background Elements */}
           <div className="absolute inset-0">
             <div
-              className="absolute top-20 right-20 w-72 h-72 bg-green-200/30 rounded-full blur-3xl animate-pulse"
+              className="absolute top-20 right-20 w-72 h-72 bg-[#00a73d]/20 rounded-full blur-3xl animate-pulse"
               style={{ animationDuration: "4s" }}
             ></div>
             <div
-              className="absolute bottom-20 left-20 w-96 h-96 bg-emerald-200/20 rounded-full blur-3xl animate-pulse"
+              className="absolute bottom-20 left-20 w-96 h-96 bg-[#00a73d]/10 rounded-full blur-3xl animate-pulse"
               style={{ animationDuration: "6s" }}
             ></div>
           </div>
@@ -36,9 +34,10 @@ const LecturerWelcome = () => {
             <div className="w-full">
               <div className="max-w-4xl mx-auto text-center space-y-8">
                 {/* Badge */}
-                <div className="inline-flex items-center px-5 py-2 rounded-full bg-white shadow-sm border border-green-100">
-                  <span className="w-2 h-2 bg-green-500 rounded-full mr-2 animate-pulse"></span>
-                  <span className="text-sm font-semibold text-green-700">
+                {/* Badge */}
+                <div className="inline-flex items-center px-5 py-2 rounded-full bg-white shadow-sm border border-gray-100">
+                  <span className="w-2 h-2 bg-[#00a73d] rounded-full mr-2 animate-pulse"></span>
+                  <span className="text-sm font-semibold text-[#00a73d]">
                     Trở thành giảng viên ngay hôm nay
                   </span>
                 </div>
@@ -48,7 +47,7 @@ const LecturerWelcome = () => {
                   <h1 className="text-5xl sm:text-6xl lg:text-7xl font-black leading-tight">
                     <span className="text-gray-900">Trở thành giảng viên</span>
                     <br />
-                    <span className="bg-gradient-to-r from-green-600 via-emerald-600 to-teal-600 bg-clip-text text-transparent">
+                    <span className="bg-gradient-to-r from-[#00a73d] to-[#008a32] bg-clip-text text-transparent">
                       Chia sẻ kiến thức và kiếm thu nhập
                     </span>
                   </h1>
@@ -62,24 +61,21 @@ const LecturerWelcome = () => {
 
                 {/* CTA Buttons */}
                 <div className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-4">
+                  <BecomeLecturerAction />
+
                   <button
                     onClick={() => router.push("/lecturer/courses/create")}
-                    className="group bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white px-8 py-4 rounded-xl font-bold text-base transition-all duration-300 shadow-lg hover:shadow-xl hover:-translate-y-0.5 flex items-center"
+                    className="group border-2 border-[#00a73d] text-[#00a73d] hover:bg-[#00a73d] hover:text-white px-8 py-4 rounded-xl font-bold text-base transition-all duration-300 flex items-center"
                   >
                     <HiPlay className="mr-2 h-5 w-5" />
-                    Bắt đầu ngay
-                  </button>
-
-                  <button className="group border-2 border-green-600 text-green-600 hover:bg-green-600 hover:text-white px-8 py-4 rounded-xl font-bold text-base transition-all duration-300 flex items-center">
-                    <HiSparkles className="mr-2 h-5 w-5" />
-                    Tìm hiểu thêm
+                    Tạo khóa học
                   </button>
                 </div>
 
                 {/* Stats */}
                 <div className="grid grid-cols-3 gap-8 pt-12 max-w-2xl mx-auto">
                   <div className="text-center">
-                    <div className="text-3xl sm:text-4xl font-black bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
+                    <div className="text-3xl sm:text-4xl font-black text-[#00a73d]">
                       10K+
                     </div>
                     <div className="text-sm font-medium text-gray-600 mt-1">
@@ -87,7 +83,7 @@ const LecturerWelcome = () => {
                     </div>
                   </div>
                   <div className="text-center">
-                    <div className="text-3xl sm:text-4xl font-black bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
+                    <div className="text-3xl sm:text-4xl font-black text-[#00a73d]">
                       50K+
                     </div>
                     <div className="text-sm font-medium text-gray-600 mt-1">
@@ -95,7 +91,7 @@ const LecturerWelcome = () => {
                     </div>
                   </div>
                   <div className="text-center">
-                    <div className="text-3xl sm:text-4xl font-black bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
+                    <div className="text-3xl sm:text-4xl font-black text-[#00a73d]">
                       70%
                     </div>
                     <div className="text-sm font-medium text-gray-600 mt-1">
@@ -107,9 +103,9 @@ const LecturerWelcome = () => {
 
               {/* Feature Cards */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-12 max-w-4xl mx-auto">
-                <div className="group bg-white rounded-2xl p-6 shadow-sm hover:shadow-xl transition-all duration-300 border border-green-100 hover:border-green-300 hover:-translate-y-1">
-                  <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-500 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                    <HiVideoCamera className="h-6 w-6 text-white" />
+                <div className="group bg-white rounded-2xl p-6 shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100 hover:border-[#00a73d]/30 hover:-translate-y-1">
+                  <div className="w-12 h-12 bg-[#00a73d]/10 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                    <HiVideoCamera className="h-6 w-6 text-[#00a73d]" />
                   </div>
                   <h3 className="text-lg font-bold text-gray-900 mb-2">
                     Tạo khóa học dễ dàng
@@ -119,9 +115,9 @@ const LecturerWelcome = () => {
                   </p>
                 </div>
 
-                <div className="group bg-white rounded-2xl p-6 shadow-sm hover:shadow-xl transition-all duration-300 border border-green-100 hover:border-green-300 hover:-translate-y-1">
-                  <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                    <HiCurrencyDollar className="h-6 w-6 text-white" />
+                <div className="group bg-white rounded-2xl p-6 shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100 hover:border-[#00a73d]/30 hover:-translate-y-1">
+                  <div className="w-12 h-12 bg-[#00a73d]/10 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                    <HiCurrencyDollar className="h-6 w-6 text-[#00a73d]" />
                   </div>
                   <h3 className="text-lg font-bold text-gray-900 mb-2">
                     Thu nhập hấp dẫn
@@ -131,9 +127,9 @@ const LecturerWelcome = () => {
                   </p>
                 </div>
 
-                <div className="group bg-white rounded-2xl p-6 shadow-sm hover:shadow-xl transition-all duration-300 border border-green-100 hover:border-green-300 hover:-translate-y-1">
-                  <div className="w-12 h-12 bg-gradient-to-br from-teal-500 to-green-500 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                    <HiUsers className="h-6 w-6 text-white" />
+                <div className="group bg-white rounded-2xl p-6 shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100 hover:border-[#00a73d]/30 hover:-translate-y-1">
+                  <div className="w-12 h-12 bg-[#00a73d]/10 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                    <HiUsers className="h-6 w-6 text-[#00a73d]" />
                   </div>
                   <h3 className="text-lg font-bold text-gray-900 mb-2">
                     Cộng đồng lớn mạnh

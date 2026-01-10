@@ -165,45 +165,8 @@ const EditTopic = ({ topicId }: { topicId: string }) => {
         category_name: selectedCategory.name,
       });
 
-      // API có thể trả về:
-      // 1. String trực tiếp (markdown)
-      // 2. JSON string được escape: "{\n  \"topic_description\": \"...\"\n}"
-      // 3. Object: { topic_description: "..." }
-      let generatedDescription = response.data;
-
-      // Nếu là string, thử parse JSON
-      if (typeof generatedDescription === "string") {
-        // Kiểm tra xem có phải JSON string không
-        if (
-          generatedDescription.trim().startsWith("{") ||
-          generatedDescription.trim().startsWith('"')
-        ) {
-          try {
-            const parsed = JSON.parse(generatedDescription);
-            // Nếu parse thành công và có topic_description
-            if (
-              parsed &&
-              typeof parsed === "object" &&
-              parsed.topic_description
-            ) {
-              generatedDescription = parsed.topic_description;
-            } else if (typeof parsed === "string") {
-              // Nếu parse ra string (double-encoded)
-              generatedDescription = parsed;
-            }
-          } catch {
-            // Nếu không parse được, giữ nguyên string (là markdown trực tiếp)
-          }
-        }
-      } else if (
-        generatedDescription &&
-        typeof generatedDescription === "object"
-      ) {
-        // Nếu là object, lấy topic_description nếu có
-        if (generatedDescription.topic_description) {
-          generatedDescription = generatedDescription.topic_description;
-        }
-      }
+      // API trả về markdown string trực tiếp
+      const generatedDescription = response.data;
 
       if (generatedDescription && typeof generatedDescription === "string") {
         setDescription(generatedDescription);

@@ -79,12 +79,10 @@ export default function Sidebar(props: SidebarProps) {
     <>
       {sidebarOpen && (
         <div
-          className="w-[434px] bg-white shadow-xl border-l border-teal-100 overflow-y-auto sticky"
+          className="w-[434px] flex-shrink-0 bg-white shadow-xl border-l border-teal-100 overflow-y-auto"
           style={{
-            top: `${headerHeightPx}px`,
             height: `calc(100vh - ${headerHeightPx}px - ${footerHeightPx}px)`,
-            paddingBottom: `${footerHeightPx}px`,
-            scrollPaddingBottom: `${footerHeightPx}px`,
+            marginTop: 0,
           }}
         >
           <div className="p-6 border-b border-teal-100 bg-gradient-to-r from-teal-50 to-emerald-50 sticky top-0 z-10">
@@ -240,30 +238,32 @@ export default function Sidebar(props: SidebarProps) {
                                     {formatDuration(lesson.duration)}
                                   </p>
                                 </div>
-                                {lesson.resources && lesson.resources.length > 0 && (
-                                  <div className="mt-1">
-                                    <button
-                                      disabled={lesson.is_locked}
-                                      onClick={() =>
-                                        setOpenResources({
-                                          open: true,
-                                          lessonTitle: lesson.title,
-                                          resources: lesson.resources as any[],
-                                        })
-                                      }
-                                      className={`inline-flex items-center gap-2 px-2 py-1 rounded-lg border text-xs font-medium transition ${
-                                        lesson.is_locked
-                                          ? "text-gray-400 border-gray-200 cursor-not-allowed"
-                                          : "text-teal-700 border-teal-200 hover:bg-teal-50 cursor-pointer"
-                                      }`}
-                                    >
-                                      <span>📎</span>
-                                      <span>
-                                        {lesson.resources.length} tài nguyên
-                                      </span>
-                                    </button>
-                                  </div>
-                                )}
+                                {lesson.resources &&
+                                  lesson.resources.length > 0 && (
+                                    <div className="mt-1">
+                                      <button
+                                        disabled={lesson.is_locked}
+                                        onClick={() =>
+                                          setOpenResources({
+                                            open: true,
+                                            lessonTitle: lesson.title,
+                                            resources:
+                                              lesson.resources as any[],
+                                          })
+                                        }
+                                        className={`inline-flex items-center gap-2 px-2 py-1 rounded-lg border text-xs font-medium transition ${
+                                          lesson.is_locked
+                                            ? "text-gray-400 border-gray-200 cursor-not-allowed"
+                                            : "text-teal-700 border-teal-200 hover:bg-teal-50 cursor-pointer"
+                                        }`}
+                                      >
+                                        <span>📎</span>
+                                        <span>
+                                          {lesson.resources.length} tài nguyên
+                                        </span>
+                                      </button>
+                                    </div>
+                                  )}
                               </div>
                               <div className="flex-shrink-0">
                                 {lesson.is_locked ? (

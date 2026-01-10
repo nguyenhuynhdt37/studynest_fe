@@ -7,6 +7,7 @@ import CoursesCarousel from "./CoursesCarousel";
 
 interface CourseItem {
   id: string;
+  slug: string;
   title: string;
   thumbnail: string;
   base_price: number;
@@ -30,7 +31,7 @@ const fetcher = (url: string) => api.get(url).then((res) => res.data);
 
 const transformCourse = (item: CourseItem) => ({
   id: item.id,
-  slug: item.id,
+  slug: item.slug,
   title: item.title,
   instructor: item.instructor?.name || "",
   instructorAvatar: item.instructor?.avatar || "",
@@ -100,38 +101,52 @@ const CoursesSection = () => {
     }
   }, [topViewData]);
 
-  // Load more handlers
-  const loadMoreNewest = useCallback(async () => {
-    if (!newestCursor || loadingMoreNewest) return;
-    setLoadingMoreNewest(true);
-    try {
-      const res = await api.get<FeedResponse>(
-        `/courses/feed/newest?limit=${itemsPerPage}&cursor=${newestCursor}`
-      );
-      setAllNewestCourses((prev) => [...prev, ...res.data.items]);
-      setNewestCursor(res.data.next_cursor);
-    } catch (error) {
-      console.error("Error loading more newest courses:", error);
-    } finally {
-      setLoadingMoreNewest(false);
-    }
-  }, [newestCursor, itemsPerPage, loadingMoreNewest]);
+  // Load more handlers - nhận callback để tăng index sau khi fetch xong
+  const loadMoreNewest = useCallback(
+    async (onSuccess?: () => void) => {
+      if (!newestCursor || loadingMoreNewest) return;
+      setLoadingMoreNewest(true);
+      try {
+        const res = await api.get<FeedResponse>(
+          `/courses/feed/newest?limit=${itemsPerPage}&cursor=${encodeURIComponent(
+            newestCursor
+          )}`
+        );
+        setAllNewestCourses((prev) => [...prev, ...res.data.items]);
+        setNewestCursor(res.data.next_cursor);
+        // Tăng index sau khi data đã về
+        onSuccess?.();
+      } catch (error) {
+        console.error("Error loading more newest courses:", error);
+      } finally {
+        setLoadingMoreNewest(false);
+      }
+    },
+    [newestCursor, itemsPerPage, loadingMoreNewest]
+  );
 
-  const loadMoreTopView = useCallback(async () => {
-    if (!topViewCursor || loadingMoreTopView) return;
-    setLoadingMoreTopView(true);
-    try {
-      const res = await api.get<FeedResponse>(
-        `/courses/feed/top-view?limit=${itemsPerPage}&cursor=${topViewCursor}`
-      );
-      setAllTopViewCourses((prev) => [...prev, ...res.data.items]);
-      setTopViewCursor(res.data.next_cursor);
-    } catch (error) {
-      console.error("Error loading more top view courses:", error);
-    } finally {
-      setLoadingMoreTopView(false);
-    }
-  }, [topViewCursor, itemsPerPage, loadingMoreTopView]);
+  const loadMoreTopView = useCallback(
+    async (onSuccess?: () => void) => {
+      if (!topViewCursor || loadingMoreTopView) return;
+      setLoadingMoreTopView(true);
+      try {
+        const res = await api.get<FeedResponse>(
+          `/courses/feed/top-view?limit=${itemsPerPage}&cursor=${encodeURIComponent(
+            topViewCursor
+          )}`
+        );
+        setAllTopViewCourses((prev) => [...prev, ...res.data.items]);
+        setTopViewCursor(res.data.next_cursor);
+        // Tăng index sau khi data đã về
+        onSuccess?.();
+      } catch (error) {
+        console.error("Error loading more top view courses:", error);
+      } finally {
+        setLoadingMoreTopView(false);
+      }
+    },
+    [topViewCursor, itemsPerPage, loadingMoreTopView]
+  );
 
   // Carousel states
   const [topRatedIndex, setTopRatedIndex] = useState(0);
@@ -162,11 +177,14 @@ const CoursesSection = () => {
         index={topViewIndex}
         onPrev={() => setTopViewIndex((p) => Math.max(0, p - 1))}
         onNext={() => {
-          const maxPage = Math.ceil(allTopViewCourses.length / itemsPerPage);
-          if (topViewIndex >= maxPage - 1 && topViewCursor) {
-            loadMoreTopView();
+          const totalPages = Math.ceil(allTopViewCourses.length / itemsPerPage);
+          // Nếu còn trang tiếp trong data hiện có -> chuyển ngay
+          if (topViewIndex < totalPages - 1) {
+            setTopViewIndex((p) => p + 1);
+          } else if (topViewCursor) {
+            // Cần fetch more -> chờ data về rồi mới chuyển trang
+            loadMoreTopView(() => setTopViewIndex((p) => p + 1));
           }
-          setTopViewIndex((p) => p + 1);
         }}
         hasMore={!!topViewCursor}
         totalPages={Math.ceil(allTopViewCourses.length / itemsPerPage)}
@@ -182,11 +200,14 @@ const CoursesSection = () => {
         index={newestIndex}
         onPrev={() => setNewestIndex((p) => Math.max(0, p - 1))}
         onNext={() => {
-          const maxPage = Math.ceil(allNewestCourses.length / itemsPerPage);
-          if (newestIndex >= maxPage - 1 && newestCursor) {
-            loadMoreNewest();
+          const totalPages = Math.ceil(allNewestCourses.length / itemsPerPage);
+          // Nếu còn trang tiếp trong data hiện có -> chuyển ngay
+          if (newestIndex < totalPages - 1) {
+            setNewestIndex((p) => p + 1);
+          } else if (newestCursor) {
+            // Cần fetch more -> chờ data về rồi mới chuyển trang
+            loadMoreNewest(() => setNewestIndex((p) => p + 1));
           }
-          setNewestIndex((p) => p + 1);
         }}
         hasMore={!!newestCursor}
         totalPages={Math.ceil(allNewestCourses.length / itemsPerPage)}

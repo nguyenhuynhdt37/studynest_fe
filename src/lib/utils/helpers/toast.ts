@@ -10,7 +10,7 @@ export const showToast = {
     return toast.success(message, {
       duration: options?.duration || 4000,
       style: {
-        borderLeft: "4px solid #00bba7",
+        borderLeft: "4px solid #00a73d",
       },
     });
   },
@@ -28,12 +28,12 @@ export const showToast = {
     return toast.loading(message, {
       duration: options?.duration || 4000,
       style: {
-        borderLeft: "4px solid #00bba7",
+        borderLeft: "4px solid #00a73d",
       },
     });
   },
 
-  promise: <T,>(
+  promise: <T>(
     promise: Promise<T>,
     messages: {
       loading: string;
@@ -52,4 +52,3 @@ export const showToast = {
     toast.dismiss(toastId);
   },
 };
-

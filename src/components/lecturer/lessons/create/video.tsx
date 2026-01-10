@@ -159,7 +159,9 @@ const CreateVideoLesson = () => {
         }
       );
 
+      // API trả về text thuần trực tiếp
       const generatedTitle = response.data;
+
       if (generatedTitle && typeof generatedTitle === "string") {
         setFormData((prev) => ({
           ...prev,
@@ -203,7 +205,9 @@ const CreateVideoLesson = () => {
         }
       );
 
+      // API trả về markdown string trực tiếp
       const generatedDescription = response.data;
+
       if (generatedDescription && typeof generatedDescription === "string") {
         setFormData((prev) => ({
           ...prev,

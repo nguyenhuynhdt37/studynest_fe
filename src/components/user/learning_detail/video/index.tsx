@@ -334,8 +334,8 @@ export default function VideoLesson({
     setQuizScore(score);
     setShowResults(true);
     const percent = (score / total) * 100;
-    if (percent >= 85) {
-      // Luôn nổ pháo hoa khi đạt >= 85%
+    if (percent >= 70) {
+      // Luôn nổ pháo hoa khi đạt >= 70%
       playSuccessSound();
       triggerCelebration(3, 2);
       confetti({

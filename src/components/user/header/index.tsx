@@ -28,6 +28,15 @@ const Header = () => {
     },
     [router]
   );
+
+  const handleLecturerClick = useCallback(() => {
+    if (user?.roles.includes("LECTURER")) {
+      handleNavigation("/lecturer");
+    } else {
+      handleNavigation("/welcome");
+    }
+  }, [user, handleNavigation]);
+
   const clearUser = useUserStore((s) => s.clearUser);
   // Các URL cần ẩn category navigation
   const hideCategoryPaths = [
@@ -37,6 +46,8 @@ const Header = () => {
     "/email_authentication",
     "/personalize",
     "/course",
+    "/categories",
+    "/instructors",
   ];
 
   const shouldShowCategories = !hideCategoryPaths.some((path) =>
@@ -143,7 +154,7 @@ const Header = () => {
                 <>
                   <button
                     type="button"
-                    onClick={() => handleNavigation("/lecturer")}
+                    onClick={handleLecturerClick}
                     className="text-gray-700 hover:text-green-600 px-3 py-2 text-sm font-semibold whitespace-nowrap transition-colors duration-200 focus:outline-none"
                   >
                     Giảng viên
@@ -299,7 +310,7 @@ const Header = () => {
 
                           <button
                             type="button"
-                            onClick={() => handleNavigation("/lecturer")}
+                            onClick={handleLecturerClick}
                             className="flex w-full items-center px-6 py-3 text-sm text-gray-700 hover:bg-green-50 hover:text-green-600 transition-colors duration-150 text-left"
                           >
                             <svg
@@ -674,7 +685,7 @@ const Header = () => {
                     <button
                       type="button"
                       onClick={() =>
-                        handleNavigation(`/category/${category.slug}`)
+                        handleNavigation(`/categories/${category.slug}`)
                       }
                       className={`block px-5 py-2 text-sm font-bold transition-all duration-200 rounded-lg ${
                         activeCategoryId === category.id
@@ -720,7 +731,7 @@ const Header = () => {
                             type="button"
                             onClick={() =>
                               handleNavigation(
-                                `/category/${activeCategory.slug}`
+                                `/categories/${activeCategory.slug}`
                               )
                             }
                             className="inline-flex items-center text-sm text-green-600 font-bold hover:text-green-700 group focus:outline-none"
@@ -756,7 +767,7 @@ const Header = () => {
                                 type="button"
                                 onClick={() =>
                                   handleNavigation(
-                                    `/category/${activeCategory.slug}/${subcategory.slug}`
+                                    `/categories/${activeCategory.slug}/${subcategory.slug}`
                                   )
                                 }
                                 className="group block w-full p-3 rounded-lg hover:bg-gradient-to-r hover:from-green-50 hover:to-emerald-50 hover:shadow-md transition-all duration-200 border border-transparent hover:border-green-200 text-left"

@@ -313,7 +313,7 @@ export default function TiptapEditor({
       Strike,
       CodeBlockLowlight.configure({
         lowlight,
-        defaultLanguage: "plaintext",
+        defaultLanguage: "",
         HTMLAttributes: { class: "tiptap-code-block" },
       }),
       HorizontalRule,

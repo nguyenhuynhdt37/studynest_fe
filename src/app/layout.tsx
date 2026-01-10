@@ -20,6 +20,7 @@ export default async function RootLayout({
       lang="vi"
       className={jakarta.variable}
       style={{ fontFamily: "var(--font-jakarta), sans-serif" }}
+      suppressHydrationWarning
     >
       <body className="font-sans" suppressHydrationWarning>
         <HydrationFix />

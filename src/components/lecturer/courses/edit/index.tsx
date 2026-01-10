@@ -269,7 +269,9 @@ const EditCourse = ({ courseId }: EditCourseProps) => {
         }
       );
 
+      // API trả về text thuần trực tiếp
       const generatedSubtitle = response.data;
+
       if (generatedSubtitle && typeof generatedSubtitle === "string") {
         setFormData((prev) => ({
           ...prev,
@@ -332,7 +334,9 @@ const EditCourse = ({ courseId }: EditCourseProps) => {
         payload
       );
 
+      // API trả về markdown string trực tiếp
       const generatedDescription = response.data;
+
       if (generatedDescription && typeof generatedDescription === "string") {
         setFormData((prev) => ({
           ...prev,
@@ -395,17 +399,10 @@ const EditCourse = ({ courseId }: EditCourseProps) => {
         payload
       );
 
-      let generatedOutcomes: string[] = [];
-
-      if (typeof response.data === "string") {
-        try {
-          generatedOutcomes = JSON.parse(response.data);
-        } catch (e) {
-          generatedOutcomes = Array.isArray(response.data) ? response.data : [];
-        }
-      } else if (Array.isArray(response.data)) {
-        generatedOutcomes = response.data;
-      }
+      // API trả về string[] trực tiếp
+      const generatedOutcomes = Array.isArray(response.data)
+        ? response.data
+        : [];
 
       if (generatedOutcomes.length > 0) {
         setFormData((prev) => ({
@@ -469,19 +466,10 @@ const EditCourse = ({ courseId }: EditCourseProps) => {
         payload
       );
 
-      let generatedRequirements: string[] = [];
-
-      if (typeof response.data === "string") {
-        try {
-          generatedRequirements = JSON.parse(response.data);
-        } catch (e) {
-          generatedRequirements = Array.isArray(response.data)
-            ? response.data
-            : [];
-        }
-      } else if (Array.isArray(response.data)) {
-        generatedRequirements = response.data;
-      }
+      // API trả về string[] trực tiếp
+      const generatedRequirements = Array.isArray(response.data)
+        ? response.data
+        : [];
 
       if (generatedRequirements.length > 0) {
         setFormData((prev) => ({
@@ -545,29 +533,10 @@ const EditCourse = ({ courseId }: EditCourseProps) => {
         payload
       );
 
-      let generatedTargetAudience: string[] = [];
-
-      if (typeof response.data === "string") {
-        try {
-          let jsonString = response.data.trim();
-          jsonString = jsonString
-            .replace(/^```json\s*/i, "")
-            .replace(/^```\s*/, "")
-            .replace(/\s*```$/, "")
-            .trim();
-          generatedTargetAudience = JSON.parse(jsonString);
-        } catch (e) {
-          try {
-            generatedTargetAudience = JSON.parse(response.data);
-          } catch (e2) {
-            generatedTargetAudience = Array.isArray(response.data)
-              ? response.data
-              : [];
-          }
-        }
-      } else if (Array.isArray(response.data)) {
-        generatedTargetAudience = response.data;
-      }
+      // API trả về string[] trực tiếp
+      const generatedTargetAudience = Array.isArray(response.data)
+        ? response.data
+        : [];
 
       if (generatedTargetAudience.length > 0) {
         setFormData((prev) => ({

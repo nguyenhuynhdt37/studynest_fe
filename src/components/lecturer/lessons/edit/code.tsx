@@ -1145,7 +1145,7 @@ const EditCodeLesson = () => {
       );
 
       if (filenameExists) {
-          showToast.error("Tên file đã tồn tại!");
+        showToast.error("Tên file đã tồn tại!");
         return {
           ...ex,
           renamingFileId: null,
@@ -1369,8 +1369,12 @@ const EditCodeLesson = () => {
         lesson_ids: selectedLessonIds,
       });
 
-      const generatedExercises = response.data;
-      if (Array.isArray(generatedExercises) && generatedExercises.length > 0) {
+      // API trả về CodeExercise[] trực tiếp
+      const generatedExercises = Array.isArray(response.data)
+        ? response.data
+        : [];
+
+      if (generatedExercises.length > 0) {
         // Map API response to CodeExercise format
         const formattedExercises: CodeExercise[] = generatedExercises.map(
           (ex: any, index: number) => {
@@ -2177,7 +2181,10 @@ const EditCodeLesson = () => {
             language_id: selectedLanguageId,
             // time_limit đã được tính từ maxCpuTime và 500ms (milliseconds), sử dụng trực tiếp
             time_limit: ex.testResult?.time_limit || 500,
-            memory_limit: ex.testResult?.memory_limit || 256000000,
+            // Memory limit nhân đôi để có buffer cho code của sinh viên (có thể không tối ưu bằng code giảng viên)
+            memory_limit: ex.testResult?.memory_limit
+              ? ex.testResult.memory_limit * 2
+              : 256000000,
             files,
             testcases,
           };

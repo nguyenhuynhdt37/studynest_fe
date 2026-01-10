@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --hostname 127.0.0.1 --port 3000",
+    "dev": "next dev --port 3000",
     "build": "next build --turbopack",
     "start": "next start"
   },
@@ -26,6 +26,7 @@
     "@mediapipe/face_mesh": "^0.4.1633559619",
     "@monaco-editor/react": "^4.7.0",
     "@radix-ui/react-dropdown-menu": "^2.1.16",
+    "@radix-ui/react-hover-card": "^1.1.15",
     "@radix-ui/react-navigation-menu": "^1.2.14",
     "@tanstack/react-query": "^5.90.8",
     "@tanstack/react-virtual": "^3.13.12",
@@ -53,6 +54,8 @@
     "canvas-confetti": "^1.9.3",
     "chart.js": "^4.5.1",
     "clsx": "^2.1.1",
+    "embla-carousel-autoplay": "^8.6.0",
+    "embla-carousel-react": "^8.6.0",
     "framer-motion": "^12.23.24",
     "lowlight": "^3.3.0",
     "lucide-react": "^0.545.0",
@@ -71,6 +74,7 @@
     "react-intersection-observer": "^9.16.0",
     "react-player": "^3.3.3",
     "reactjs-fb-reactions": "^0.1.7",
+    "swiper": "^12.0.3",
     "swr": "^2.3.6",
     "tailwind-merge": "^3.3.1",
     "turndown": "^7.2.2",

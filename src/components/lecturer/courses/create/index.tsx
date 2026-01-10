@@ -23,16 +23,6 @@ import {
 } from "react-icons/hi";
 import useSWR from "swr";
 
-interface CategoriesPaginatedResponse {
-  items: Category[];
-  pagination: {
-    page: number;
-    page_size: number;
-    total_items: number;
-    total_pages: number;
-  };
-}
-
 interface TopicsResponse {
   meta: {
     page: number;
@@ -104,8 +94,8 @@ const CreateCourse = () => {
   const totalSteps = 4;
 
   // Fetch categories
-  const { data: categoriesData } = useSWR<CategoriesPaginatedResponse>(
-    "/admin/categories?page=1&page_size=100&sort_by=name&sort_order=asc",
+  const { data: categoriesData } = useSWR<Category[]>(
+    "/lecturer/courses/categories",
     async (url: string) => {
       const res = await api.get(url);
       return res.data;
@@ -129,7 +119,7 @@ const CreateCourse = () => {
     }
   );
 
-  const allCategories = categoriesData?.items || [];
+  const allCategories = categoriesData || [];
   const allTopics = topicsData?.data || [];
 
   // Reset topic when category changes
@@ -258,8 +248,9 @@ const CreateCourse = () => {
         }
       );
 
-      // API trả về string trực tiếp
+      // API trả về text thuần trực tiếp
       const generatedSubtitle = response.data;
+
       if (generatedSubtitle && typeof generatedSubtitle === "string") {
         setFormData((prev) => ({
           ...prev,
@@ -310,7 +301,6 @@ const CreateCourse = () => {
         category_name: selectedCategory.name,
       };
 
-      // Only include topic_name if topic is selected
       if (formData.topic_id.trim()) {
         const selectedTopic = allTopics.find((t) => t.id === formData.topic_id);
         if (selectedTopic) {
@@ -323,8 +313,9 @@ const CreateCourse = () => {
         payload
       );
 
-      // API trả về string (markdown) trực tiếp
+      // API trả về markdown string trực tiếp
       const generatedDescription = response.data;
+
       if (generatedDescription && typeof generatedDescription === "string") {
         setFormData((prev) => ({
           ...prev,
@@ -375,7 +366,6 @@ const CreateCourse = () => {
         category_name: selectedCategory.name,
       };
 
-      // Only include topic_name if topic is selected
       if (formData.topic_id.trim()) {
         const selectedTopic = allTopics.find((t) => t.id === formData.topic_id);
         if (selectedTopic) {
@@ -388,19 +378,10 @@ const CreateCourse = () => {
         payload
       );
 
-      // API trả về string JSON array, cần parse
-      let generatedOutcomes: string[] = [];
-
-      if (typeof response.data === "string") {
-        try {
-          generatedOutcomes = JSON.parse(response.data);
-        } catch (e) {
-          // Nếu parse lỗi, thử dùng response.data trực tiếp nếu là array
-          generatedOutcomes = Array.isArray(response.data) ? response.data : [];
-        }
-      } else if (Array.isArray(response.data)) {
-        generatedOutcomes = response.data;
-      }
+      // API trả về string[] trực tiếp
+      const generatedOutcomes = Array.isArray(response.data)
+        ? response.data
+        : [];
 
       if (generatedOutcomes.length > 0) {
         setFormData((prev) => ({
@@ -452,7 +433,6 @@ const CreateCourse = () => {
         category_name: selectedCategory.name,
       };
 
-      // Only include topic_name if topic is selected
       if (formData.topic_id.trim()) {
         const selectedTopic = allTopics.find((t) => t.id === formData.topic_id);
         if (selectedTopic) {
@@ -465,21 +445,10 @@ const CreateCourse = () => {
         payload
       );
 
-      // API trả về string JSON array, cần parse
-      let generatedRequirements: string[] = [];
-
-      if (typeof response.data === "string") {
-        try {
-          generatedRequirements = JSON.parse(response.data);
-        } catch (e) {
-          // Nếu parse lỗi, thử dùng response.data trực tiếp nếu là array
-          generatedRequirements = Array.isArray(response.data)
-            ? response.data
-            : [];
-        }
-      } else if (Array.isArray(response.data)) {
-        generatedRequirements = response.data;
-      }
+      // API trả về string[] trực tiếp
+      const generatedRequirements = Array.isArray(response.data)
+        ? response.data
+        : [];
 
       if (generatedRequirements.length > 0) {
         setFormData((prev) => ({
@@ -531,7 +500,6 @@ const CreateCourse = () => {
         category_name: selectedCategory.name,
       };
 
-      // Only include topic_name if topic is selected
       if (formData.topic_id.trim()) {
         const selectedTopic = allTopics.find((t) => t.id === formData.topic_id);
         if (selectedTopic) {
@@ -544,38 +512,10 @@ const CreateCourse = () => {
         payload
       );
 
-      // API trả về markdown code block với JSON array bên trong
-      let generatedTargetAudience: string[] = [];
-
-      if (typeof response.data === "string") {
-        try {
-          // Extract JSON từ markdown code block
-          // Format: ```json\n[...]\n```
-          let jsonString = response.data.trim();
-
-          // Remove markdown code block markers
-          jsonString = jsonString
-            .replace(/^```json\s*/i, "")
-            .replace(/^```\s*/, "")
-            .replace(/\s*```$/, "")
-            .trim();
-
-          // Parse JSON
-          generatedTargetAudience = JSON.parse(jsonString);
-        } catch (e) {
-          // Nếu parse lỗi, thử parse trực tiếp nếu là JSON string
-          try {
-            generatedTargetAudience = JSON.parse(response.data);
-          } catch (e2) {
-            // Nếu vẫn lỗi, thử dùng response.data trực tiếp nếu là array
-            generatedTargetAudience = Array.isArray(response.data)
-              ? response.data
-              : [];
-          }
-        }
-      } else if (Array.isArray(response.data)) {
-        generatedTargetAudience = response.data;
-      }
+      // API trả về string[] trực tiếp
+      const generatedTargetAudience = Array.isArray(response.data)
+        ? response.data
+        : [];
 
       if (generatedTargetAudience.length > 0) {
         setFormData((prev) => ({

@@ -11,9 +11,11 @@ import React, {
   useMemo,
   useRef,
   useState,
+  Suspense,
 } from "react";
 import { HiBookOpen } from "react-icons/hi";
 import useSWR from "swr";
+import { TutorChatPanel, ResizablePanel } from "./chat";
 import FooterControls from "./FooterControls";
 import LearningHeader from "./header";
 import LessonRenderer from "./LessonRenderer";
@@ -104,6 +106,7 @@ function LearningDetail(props: LearningDetailProps) {
   const [notes, setNotes] = useState("");
   const [activeTab, setActiveTab] = useState("lesson");
   const [openProgress, setOpenProgress] = useState(false);
+  const [chatOpen, setChatOpen] = useState(false);
 
   // Refs
   const lessonRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
@@ -432,13 +435,24 @@ function LearningDetail(props: LearningDetailProps) {
       <LearningHeader
         courseTitle={curriculumData.title}
         onOpenProgress={() => setOpenProgress(true)}
+        chatOpen={chatOpen}
+        onToggleChat={() => {
+          const newChatOpen = !chatOpen;
+          setChatOpen(newChatOpen);
+          // Khi mở chat thì đóng sidebar, khi đóng chat thì mở lại sidebar
+          if (newChatOpen) {
+            setSidebarOpen(false);
+          } else {
+            setSidebarOpen(true);
+          }
+        }}
       />
 
       {/* Main Layout */}
       <div className="flex">
         {/* Main Content Area */}
         <div
-          className={`flex-1 overflow-y-auto`}
+          className="flex-1 overflow-y-auto"
           style={{ height: "calc(100vh - 5rem - 4rem)" }}
         >
           <LessonRenderer
@@ -454,7 +468,6 @@ function LearningDetail(props: LearningDetailProps) {
             hasNext={navigationData?.can_next ?? false}
             hasPrev={navigationData?.can_prev ?? false}
             onSeekToTime={(timeSeconds: number) => {
-              // Gọi hàm seek thông qua window object
               if (initialActiveLesson?.id) {
                 const seekFn = (window as any)[
                   `seekVideo_${initialActiveLesson.id}`
@@ -482,7 +495,7 @@ function LearningDetail(props: LearningDetailProps) {
                   initialActiveLesson
                     ? {
                         id: initialActiveLesson.id,
-                        section_id: initialActiveLesson.id, // Fallback to id
+                        section_id: initialActiveLesson.id,
                         title: initialActiveLesson.title || "Bài học",
                         description: initialActiveLesson.description || null,
                         lesson_type: initialActiveLesson.lesson_type || "video",
@@ -502,7 +515,6 @@ function LearningDetail(props: LearningDetailProps) {
                     : undefined
                 }
                 onSeekToTime={(timeSeconds: number) => {
-                  // Gọi hàm seek thông qua window object
                   if (initialActiveLesson?.id) {
                     const seekFn = (window as any)[
                       `seekVideo_${initialActiveLesson.id}`
@@ -517,6 +529,52 @@ function LearningDetail(props: LearningDetailProps) {
             )}
         </div>
 
+        {/* Tutor Chat Panel - Resizable - nằm giữa content và sidebar */}
+        {initialActiveLesson && (
+          <ResizablePanel
+            isOpen={chatOpen}
+            onToggle={() => setChatOpen(!chatOpen)}
+            minWidth={320}
+            maxWidth={800}
+            defaultWidth={400}
+          >
+            <div style={{ height: "calc(100vh - 5rem - 4rem)" }}>
+              <Suspense
+                fallback={
+                  <div className="h-full flex items-center justify-center">
+                    <div className="w-8 h-8 border-2 border-green-600 border-t-transparent rounded-full animate-spin" />
+                  </div>
+                }
+              >
+                <TutorChatPanel
+                  lessonId={initialActiveLesson.id}
+                  lessonTitle={initialActiveLesson.title || "Bài học"}
+                  courseId={courseData.id}
+                  courseTitle={curriculumData.title}
+                  sectionId={
+                    curriculumData.sections.find((s) =>
+                      s.lessons.some((l) => l.id === initialActiveLesson.id)
+                    )?.id
+                  }
+                  onSeekToTime={(timeSeconds: number) => {
+                    const seekFn = (window as any)[
+                      `seekVideo_${initialActiveLesson.id}`
+                    ];
+                    if (seekFn) {
+                      seekFn(timeSeconds);
+                    }
+                  }}
+                  onClose={() => {
+                    setChatOpen(false);
+                    setSidebarOpen(true);
+                  }}
+                />
+              </Suspense>
+            </div>
+          </ResizablePanel>
+        )}
+
+        {/* Sidebar - nằm bên phải cùng */}
         <Sidebar
           sections={curriculumData.sections}
           sidebarOpen={sidebarOpen}
@@ -538,27 +596,36 @@ function LearningDetail(props: LearningDetailProps) {
           headerHeightPx={80}
           footerHeightPx={64}
         />
-
-        <FooterControls
-          sidebarOpen={sidebarOpen}
-          toggleSidebar={() => setSidebarOpen(!sidebarOpen)}
-          currentTitle={initialActiveLesson?.title || ""}
-          currentDuration={
-            initialActiveLesson?.duration
-              ? formatDuration(initialActiveLesson.duration)
-              : ""
-          }
-          goNext={() =>
-            setActiveLessonAndRefresh(navigationData?.next_lesson_id || "")
-          }
-          goPrev={() =>
-            setActiveLessonAndRefresh(navigationData?.prev_lesson_id || "")
-          }
-          hasPrev={navigationData?.can_prev ?? false}
-          hasNext={navigationData?.can_next ?? false}
-          lessonJustCompleted={lessonJustCompleted}
-        />
       </div>
+
+      {/* Footer Controls - fixed bottom */}
+      <FooterControls
+        sidebarOpen={sidebarOpen}
+        toggleSidebar={() => {
+          const newSidebarOpen = !sidebarOpen;
+          setSidebarOpen(newSidebarOpen);
+          // Khi mở sidebar thì đóng chat
+          if (newSidebarOpen) {
+            setChatOpen(false);
+          }
+        }}
+        currentTitle={initialActiveLesson?.title || ""}
+        currentDuration={
+          initialActiveLesson?.duration
+            ? formatDuration(initialActiveLesson.duration)
+            : ""
+        }
+        goNext={() =>
+          setActiveLessonAndRefresh(navigationData?.next_lesson_id || "")
+        }
+        goPrev={() =>
+          setActiveLessonAndRefresh(navigationData?.prev_lesson_id || "")
+        }
+        hasPrev={navigationData?.can_prev ?? false}
+        hasNext={navigationData?.can_next ?? false}
+        lessonJustCompleted={lessonJustCompleted}
+      />
+
       <ProgressModal
         open={openProgress}
         onClose={() => setOpenProgress(false)}

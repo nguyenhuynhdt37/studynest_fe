@@ -18,6 +18,8 @@ interface MarkdownRendererProps {
   isHtml?: boolean;
 }
 
+import { getGoogleDriveImageUrl } from "@/lib/utils/helpers/image";
+
 // ⚙️ Markdown → HTML converter (markdown-it + GFM) - giống TiptapEditor
 const parseMarkdownToHTML = (markdown: string): string => {
   if (!markdown || !markdown.trim()) return "";
@@ -33,6 +35,38 @@ const parseMarkdownToHTML = (markdown: string): string => {
     .use(markdownItTaskLists, { enabled: true, label: true })
     .use(markdownItAttrs)
     .use(markdownItAnchor, { permalink: false });
+
+  // Custom image renderer: Convert Google Drive URLs
+  const defaultImageRender =
+    md.renderer.rules.image ||
+    function (tokens, idx, options, env, self) {
+      return self.renderToken(tokens, idx, options);
+    };
+
+  md.renderer.rules.image = function (tokens, idx, options, env, self) {
+    const token = tokens[idx];
+    const srcIndex = token.attrIndex("src");
+
+    if (srcIndex >= 0 && token.attrs) {
+      const src = token.attrs[srcIndex][1];
+      // Convert Google Drive URL using helper
+      token.attrs[srcIndex][1] = getGoogleDriveImageUrl(src);
+
+      // Thêm class cho ảnh để đẹp hơn (optional)
+      const classIndex = token.attrIndex("class");
+      if (classIndex < 0) {
+        token.attrPush([
+          "class",
+          "rounded-lg max-w-full h-auto my-2 shadow-sm",
+        ]);
+      } else {
+        token.attrs[classIndex][1] +=
+          " rounded-lg max-w-full h-auto my-2 shadow-sm";
+      }
+    }
+
+    return defaultImageRender(tokens, idx, options, env, self);
+  };
 
   // Xử lý underline syntax: __text__ -> <u>text</u>
   // Placeholder underline để không đụng vào **bold**

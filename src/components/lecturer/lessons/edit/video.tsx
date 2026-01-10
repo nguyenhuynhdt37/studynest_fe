@@ -367,7 +367,9 @@ const EditVideoLesson = () => {
         { title: formData.title.trim() }
       );
 
+      // API trả về text thuần trực tiếp
       const generatedTitle = response.data;
+
       if (generatedTitle && typeof generatedTitle === "string") {
         setFormData((prev) => ({ ...prev, title: generatedTitle }));
       } else {
@@ -408,7 +410,9 @@ const EditVideoLesson = () => {
         }
       );
 
+      // API trả về markdown string trực tiếp
       const generatedDescription = response.data;
+
       if (generatedDescription && typeof generatedDescription === "string") {
         setFormData((prev) => ({ ...prev, description: generatedDescription }));
       } else {

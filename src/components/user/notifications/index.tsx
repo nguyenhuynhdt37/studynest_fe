@@ -2,140 +2,147 @@
 
 import Pagination from "@/components/shared/pagination";
 import api from "@/lib/utils/fetcher/client/axios";
+import { showToast } from "@/lib/utils/helpers/toast";
+import { useRealtimeNotiStore } from "@/stores/notifications";
 import {
   NotificationsQueryParams,
   NotificationsResponse,
 } from "@/types/user/notification";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { HiBell, HiExclamationCircle } from "react-icons/hi";
 import { NotificationCard } from "./notification-card";
 import { NotificationsToolbar } from "./notifications-toolbar";
 
 export default function Notifications() {
-  const [searchInput, setSearchInput] = useState("");
-  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
-  const [typeFilter, setTypeFilter] = useState("");
-  const [readFilter, setReadFilter] = useState("");
+  const [search, setSearch] = useState("");
+  const [type, setType] = useState("");
+  const [read, setRead] = useState("");
   const [sortBy, setSortBy] = useState("created_at");
   const [orderDir, setOrderDir] = useState<"asc" | "desc">("desc");
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(20);
-  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
-
-  useEffect(() => {
-    if (debounceTimerRef.current) {
-      clearTimeout(debounceTimerRef.current);
-    }
-
-    debounceTimerRef.current = setTimeout(() => {
-      setDebouncedSearchQuery(searchInput);
-    }, 500);
-
-    return () => {
-      if (debounceTimerRef.current) {
-        clearTimeout(debounceTimerRef.current);
-      }
-    };
-  }, [searchInput]);
 
   const queryClient = useQueryClient();
+  const markAllAsRead = useRealtimeNotiStore((s) => s.markAllRead);
+  const hydrate = useRealtimeNotiStore((s) => s.hydrate);
 
-  const buildQueryParams = (): NotificationsQueryParams => {
-    const params: NotificationsQueryParams = {
-      page,
-      limit,
-      sort_by: sortBy,
-      order_dir: orderDir,
-    };
-
-    if (debouncedSearchQuery.trim()) {
-      params.search = debouncedSearchQuery.trim();
-    }
-
-    if (typeFilter) {
-      params.type = typeFilter;
-    }
-
-    if (readFilter !== "") {
-      params.is_read = readFilter === "true";
-    }
-
-    return params;
+  const params: NotificationsQueryParams = {
+    page,
+    limit,
+    sort_by: sortBy,
+    order_dir: orderDir,
+    ...(search.trim() && { search: search.trim() }),
+    ...(type && { type }),
+    ...(read !== "" && { is_read: read === "true" }),
   };
 
-  const queryParams = buildQueryParams();
+  const { data, error, isLoading } = useQuery<NotificationsResponse>({
+    queryKey: ["notifications", params],
+    queryFn: () =>
+      api.get("/notifications/user", { params }).then((r) => r.data),
+  });
 
-  const { data, error, isLoading, isFetching } =
-    useQuery<NotificationsResponse>({
-      queryKey: ["notifications", queryParams],
-      queryFn: async () => {
-        const response = await api.get("/notifications/user", {
-          params: queryParams,
-        });
-        return response.data;
-      },
-      staleTime: 2000,
-      placeholderData: (previousData) => previousData,
-    });
+  useEffect(() => {
+    if (data && page === 1 && !search && !type && read === "") {
+      hydrate("USER", data.items.slice(0, 10), data.unread ?? 0);
+    }
+  }, [data, page, search, type, read, hydrate]);
 
-  const markAsReadMutation = useMutation({
-    mutationFn: async (id: string) => {
-      const response = await api.patch(`/notifications/${id}/read`);
-      return response.data;
-    },
-    onSuccess: () => {
+  const markAsRead = useMutation({
+    mutationFn: (id: string) =>
+      api.post(`/notifications/read/${id}`).then((r) => r.data),
+    onSuccess: (_, id) => {
+      queryClient.setQueriesData<NotificationsResponse>(
+        { queryKey: ["notifications"] },
+        (old) => {
+          if (!old) return old;
+          const notification = old.items.find((item) => item.id === id);
+          if (!notification || notification.is_read) return old;
+
+          const updatedItems = old.items.map((item) =>
+            item.id === id ? { ...item, is_read: true } : item
+          );
+          return {
+            ...old,
+            unread: Math.max(0, old.unread - 1),
+            items: updatedItems,
+          };
+        }
+      );
       queryClient.invalidateQueries({ queryKey: ["notifications"] });
     },
   });
 
-  useEffect(() => {
-    setPage(1);
-  }, [debouncedSearchQuery, typeFilter, readFilter, sortBy, orderDir]);
+  const markAll = useMutation({
+    mutationFn: () =>
+      api.post("/notifications/read-all/user").then((r) => r.data),
+    onSuccess: () => {
+      markAllAsRead("USER");
+      queryClient.setQueriesData<NotificationsResponse>(
+        { queryKey: ["notifications"] },
+        (old) =>
+          old
+            ? {
+                ...old,
+                unread: 0,
+                items: old.items.map((item) => ({ ...item, is_read: true })),
+              }
+            : old
+      );
+      queryClient.invalidateQueries({ queryKey: ["notifications"] });
+      showToast.success("Đã đánh dấu tất cả thông báo là đã đọc");
+    },
+  });
 
-  const handleMarkAsRead = async (id: string) => {
-    try {
-      await markAsReadMutation.mutateAsync(id);
-    } catch (error) {
-      console.error("Failed to mark notification as read:", error);
-    }
-  };
-
-  const totalPages = data ? Math.ceil(data.total / limit) : 0;
-  const unreadCount = data?.unread || 0;
+  useEffect(() => setPage(1), [search, type, read, sortBy, orderDir]);
 
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="mx-auto max-w-7xl px-4 py-8">
-        {/* Header */}
         <header className="mb-8">
           <div className="flex items-start justify-between gap-4">
-            <div className="flex-1">
+            <div>
               <h1 className="text-3xl font-bold text-gray-900">Thông báo</h1>
               <p className="text-sm text-gray-600 mt-2">
                 Xem và quản lý tất cả thông báo của bạn
               </p>
             </div>
-            {unreadCount > 0 && (
-              <div className="flex items-center gap-2 px-4 py-2 rounded-lg bg-green-50 border border-green-200">
-                <HiBell className="h-5 w-5 text-green-600" />
-                <span className="text-sm font-semibold text-green-700">
-                  {unreadCount} chưa đọc
-                </span>
+            {data?.unread && data.unread > 0 && (
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2 px-4 py-2 rounded-lg bg-green-50 border border-green-200">
+                  <HiBell className="h-5 w-5 text-green-600" />
+                  <span className="text-sm font-semibold text-green-700">
+                    {data.unread} chưa đọc
+                  </span>
+                </div>
+                <button
+                  onClick={() => markAll.mutate()}
+                  disabled={markAll.isPending}
+                  className="px-4 py-2 bg-[#00bba7] text-white text-sm font-semibold rounded-lg hover:bg-[#00a896] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                >
+                  {markAll.isPending ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      <span>Đang xử lý...</span>
+                    </>
+                  ) : (
+                    <span>Đánh dấu đã đọc tất cả</span>
+                  )}
+                </button>
               </div>
             )}
           </div>
         </header>
 
-        {/* Toolbar */}
         <div className="mb-6">
           <NotificationsToolbar
-            searchQuery={searchInput}
-            onSearchChange={setSearchInput}
-            typeFilter={typeFilter}
-            onTypeFilterChange={setTypeFilter}
-            readFilter={readFilter}
-            onReadFilterChange={setReadFilter}
+            searchQuery={search}
+            onSearchChange={setSearch}
+            typeFilter={type}
+            onTypeFilterChange={setType}
+            readFilter={read}
+            onReadFilterChange={setRead}
             sortBy={sortBy}
             onSortByChange={setSortBy}
             orderDir={orderDir}
@@ -143,8 +150,7 @@ export default function Notifications() {
           />
         </div>
 
-        {/* Content */}
-        {isLoading && !data && (
+        {isLoading && (
           <div className="space-y-4">
             {[...Array(5)].map((_, i) => (
               <div
@@ -162,13 +168,7 @@ export default function Notifications() {
         )}
 
         {data && (
-          <div className="relative">
-            {isFetching && data && (
-              <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/50 backdrop-blur-sm rounded-xl">
-                <div className="h-8 w-8 animate-spin rounded-full border-4 border-green-200 border-t-green-600" />
-              </div>
-            )}
-
+          <>
             {data.items.length === 0 ? (
               <div className="rounded-xl border border-green-200 bg-white p-12 text-center shadow-sm">
                 <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 mb-4">
@@ -182,32 +182,33 @@ export default function Notifications() {
                 </p>
               </div>
             ) : (
-              <div className="space-y-3">
-                {data.items.map((notification) => (
-                  <NotificationCard
-                    key={notification.id}
-                    notification={notification}
-                    onMarkAsRead={handleMarkAsRead}
-                  />
-                ))}
-              </div>
+              <>
+                <div className="space-y-3">
+                  {data.items.map((notification) => (
+                    <NotificationCard
+                      key={notification.id}
+                      notification={notification}
+                      onMarkAsRead={(id) => markAsRead.mutate(id)}
+                    />
+                  ))}
+                </div>
+                {data.total > 0 && (
+                  <div className="mt-8">
+                    <Pagination
+                      currentPage={page}
+                      totalPages={Math.ceil(data.total / limit)}
+                      totalItems={data.total}
+                      pageSize={limit}
+                      onPageChange={setPage}
+                      onPageSizeChange={setLimit}
+                      showPageSizeSelector={true}
+                      pageSizeOptions={[10, 20, 50]}
+                    />
+                  </div>
+                )}
+              </>
             )}
-
-            {data.total > 0 && (
-              <div className="mt-8">
-                <Pagination
-                  currentPage={page}
-                  totalPages={totalPages}
-                  totalItems={data.total}
-                  pageSize={limit}
-                  onPageChange={setPage}
-                  onPageSizeChange={setLimit}
-                  showPageSizeSelector={true}
-                  pageSizeOptions={[10, 20, 50]}
-                />
-              </div>
-            )}
-          </div>
+          </>
         )}
       </div>
     </div>

@@ -50,7 +50,7 @@ Responsive bắt buộc (mobile-first).
 
 4️⃣ Màu sắc & style
 
-Chủ đạo: #00bba7 (tự chọn tone phù hợp).
+Chủ đạo: #00a73d
 
 Không thêm màu khác.
 
@@ -69,6 +69,8 @@ Không dùng any trừ khi thật cần.
 Luôn viết type rõ ràng (interface, type).
 
 Mỗi component ≤ 150 dòng.
+
+Luôn di chuyển phần types api từ backend vào forder types của dự án và di chuyển vào đúng rules
 
 6️⃣ Hiệu năng
 

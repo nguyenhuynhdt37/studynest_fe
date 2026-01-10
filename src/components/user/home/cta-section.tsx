@@ -1,8 +1,13 @@
 "use client";
 
+import { useUserStore } from "@/stores/user";
 import { HiGift } from "react-icons/hi";
 
 const CTASection = () => {
+  const user = useUserStore((s) => s.user);
+
+  if (user) return null;
+
   return (
     <section className="py-20 bg-gradient-to-br from-green-600 via-emerald-600 to-teal-600 text-white relative overflow-hidden">
       <div className="absolute top-0 left-0 w-64 h-64 bg-white/10 rounded-full blur-3xl" />
@@ -37,4 +42,3 @@ const CTASection = () => {
 };
 
 export default CTASection;
-

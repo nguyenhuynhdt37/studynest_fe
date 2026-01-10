@@ -7,10 +7,9 @@ import { useRealtimeNotiStore } from "@/stores/notifications";
 import { useUserStore } from "@/stores/user";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import {
   HiAcademicCap,
-  HiBell,
   HiChartBar,
   HiCurrencyDollar,
   HiMenu,
@@ -21,6 +20,7 @@ import {
   HiX,
 } from "react-icons/hi";
 import useSWR from "swr";
+import { NotificationButton } from "./notification";
 
 const LecturerHeader = () => {
   const router = useRouter();
@@ -29,9 +29,7 @@ const LecturerHeader = () => {
   const clearUser = useUserStore((s) => s.clearUser);
   const clearNotifications = useRealtimeNotiStore((s) => s.clearAll);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [showNotifications, setShowNotifications] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const notificationsRef = useRef<HTMLDivElement>(null);
   const userMenuRef = useRef<HTMLDivElement>(null);
 
   const navLinks = [
@@ -39,7 +37,7 @@ const LecturerHeader = () => {
     { href: "/lecturer/courses", label: "Khóa học", icon: HiVideoCamera },
     { href: "/lecturer/discounts", label: "Mã giảm giá", icon: HiTag },
     { href: "/lecturer/wallets", label: "Ví", icon: HiCurrencyDollar },
-    { href: "/lecturer/analytics", label: "Thống kê", icon: HiChartBar },
+    { href: "/lecturer/dashboard", label: "Thống kê", icon: HiChartBar },
   ];
 
   // Get user initials
@@ -69,55 +67,8 @@ const LecturerHeader = () => {
 
   const handleNavigation = (path: string) => {
     router.push(path);
-    setShowNotifications(false);
     setIsMobileMenuOpen(false);
   };
-
-  // Close dropdowns when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        notificationsRef.current &&
-        !notificationsRef.current.contains(event.target as Node)
-      ) {
-        setShowNotifications(false);
-      }
-    };
-
-    if (showNotifications) {
-      document.addEventListener("mousedown", handleClickOutside);
-    }
-
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [showNotifications]);
-
-  const notifications = [
-    {
-      id: 1,
-      title: "Khóa học mới",
-      message: "Bạn có khóa học mới cần xem xét",
-      time: "2 phút trước",
-      unread: true,
-    },
-    {
-      id: 2,
-      title: "Học viên mới",
-      message: 'Sarah đã đăng ký "React Fundamentals"',
-      time: "15 phút trước",
-      unread: true,
-    },
-    {
-      id: 3,
-      title: "Thanh toán",
-      message: "Nhận thanh toán từ khóa học",
-      time: "1 giờ trước",
-      unread: false,
-    },
-  ];
-
-  const unreadCount = notifications.filter((n) => n.unread).length;
 
   // Fetch hold earnings count
   const { data: holdData } = useSWR<HoldEarningsResponse>(
@@ -192,67 +143,7 @@ const LecturerHeader = () => {
             </div>
 
             {/* Notifications */}
-            <div className="relative" ref={notificationsRef}>
-              <button
-                type="button"
-                onClick={() => {
-                  setShowNotifications(!showNotifications);
-                }}
-                className="relative p-2 rounded-lg hover:bg-green-50 transition-colors"
-              >
-                <HiBell className="h-6 w-6 text-gray-600" />
-                {unreadCount > 0 && (
-                  <span className="absolute top-0 right-0 bg-green-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                    {unreadCount}
-                  </span>
-                )}
-              </button>
-
-              {/* Notifications Dropdown */}
-              {showNotifications && (
-                <div className="absolute right-0 top-full mt-2 w-80 bg-white border-2 border-green-100 rounded-xl shadow-2xl z-50">
-                  <div className="p-4 border-b-2 border-green-100 bg-gradient-to-r from-green-50 to-emerald-50">
-                    <h3 className="font-semibold text-gray-900 flex items-center justify-between">
-                      <span>Thông báo</span>
-                      {unreadCount > 0 && (
-                        <span className="bg-green-600 text-white text-xs px-2 py-1 rounded-full">
-                          {unreadCount} mới
-                        </span>
-                      )}
-                    </h3>
-                  </div>
-                  <div className="max-h-96 overflow-y-auto">
-                    {notifications.map((notification) => (
-                      <div
-                        key={notification.id}
-                        className={`p-4 border-b border-gray-100 hover:bg-green-50 cursor-pointer transition-colors ${
-                          notification.unread ? "bg-green-50" : ""
-                        }`}
-                      >
-                        <p className="font-medium text-gray-900 text-sm">
-                          {notification.title}
-                        </p>
-                        <p className="text-gray-600 text-sm mt-1">
-                          {notification.message}
-                        </p>
-                        <p className="text-gray-400 text-xs mt-1">
-                          {notification.time}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="p-4 border-t-2 border-green-100">
-                    <button
-                      type="button"
-                      onClick={() => handleNavigation("/lecturer/notifications")}
-                      className="w-full text-center text-green-600 hover:text-green-700 font-medium text-sm transition-colors"
-                    >
-                      Xem tất cả thông báo
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
+            <NotificationButton role="LECTURER" />
 
             {/* Profile Dropdown */}
             <div className="relative group" ref={userMenuRef}>

@@ -6,12 +6,10 @@ export interface Notification {
   url: string | null;
   metadata_: Record<string, unknown>;
   is_read: boolean;
-  is_clicked: boolean;
   created_at: string;
   action: string;
   type: string;
   read_at: string | null;
-  clicked_at: string | null;
   updated_at: string;
   role_target: string[];
 }

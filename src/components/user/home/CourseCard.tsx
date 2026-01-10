@@ -53,6 +53,8 @@ const CourseCard = ({
 
   const checkEnrollmentAndNavigate = useCallback(
     async (courseId: string, slug: string) => {
+      console.log("courseId", courseId);
+      console.log("slug", slug);
       if (isCheckingEnrollment) return;
 
       setIsCheckingEnrollment(true);

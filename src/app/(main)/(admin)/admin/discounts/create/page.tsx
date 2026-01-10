@@ -1,4 +1,4 @@
-import CreateDiscount from "@/components/lecturer/discounts/create";
+import CreateDiscount from "@/components/admin/discounts/create";
 
 export default function CreateDiscountPage() {
   return <CreateDiscount />;

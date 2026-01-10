@@ -96,7 +96,7 @@ export default function FooterControls(props: FooterControlsProps) {
       {/* Sidebar Toggle - Below Footer */}
       <button
         onClick={toggleSidebar}
-        className="fixed bottom-20 right-4 w-12 h-12 bg-white hover:bg-gray-50 text-gray-700 hover:text-teal-600 rounded-full shadow-lg hover:shadow-xl border border-gray-200 hover:border-teal-300 transition-all duration-300 flex items-center justify-center z-50"
+        className="fixed bottom-3 right-4 w-12 h-12 bg-white hover:bg-gray-50 text-gray-700 hover:text-teal-600 rounded-full shadow-lg hover:shadow-xl border border-gray-200 hover:border-teal-300 transition-all duration-300 flex items-center justify-center z-50"
         title={sidebarOpen ? "Ẩn nội dung khóa học" : "Hiện nội dung khóa học"}
       >
         {sidebarOpen ? (

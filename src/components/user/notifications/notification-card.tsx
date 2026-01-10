@@ -3,6 +3,7 @@
 import { Notification } from "@/types/user/notification";
 import Link from "next/link";
 import { HiCheckCircle, HiClock } from "react-icons/hi";
+import { useState, useEffect } from "react";
 
 interface NotificationCardProps {
   notification: Notification;
@@ -13,6 +14,19 @@ export function NotificationCard({
   notification,
   onMarkAsRead,
 }: NotificationCardProps) {
+  const [isRead, setIsRead] = useState(notification.is_read);
+
+  useEffect(() => {
+    setIsRead(notification.is_read);
+  }, [notification.is_read]);
+
+  const handleMarkAsRead = () => {
+    if (!isRead && onMarkAsRead) {
+      setIsRead(true);
+      onMarkAsRead(notification.id);
+    }
+  };
+
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     const now = new Date();
@@ -43,21 +57,21 @@ export function NotificationCard({
     return labels[type] || type;
   };
 
-  const cardContent = (
-    <div
-      className={`group relative rounded-xl border p-4 transition-all duration-200 ${
-        notification.is_read
-          ? "border-green-200 bg-white hover:border-green-300"
-          : "border-green-300 bg-green-50/50 hover:border-green-400 hover:shadow-md"
-      }`}
-    >
+  const cardClassName = `group relative rounded-xl border p-4 transition-all duration-200 cursor-pointer ${
+    isRead
+      ? "border-green-200 bg-white hover:border-green-300"
+      : "border-green-300 bg-green-50/50 hover:border-green-400 hover:shadow-md"
+  }`;
+
+  const cardInner = (
+    <>
       <div className="flex items-start gap-3">
         <div
           className={`mt-1 flex-shrink-0 ${
-            notification.is_read ? "text-gray-400" : "text-green-600"
+            isRead ? "text-gray-400" : "text-green-600"
           }`}
         >
-          {notification.is_read ? (
+          {isRead ? (
             <HiCheckCircle className="h-5 w-5" />
           ) : (
             <div className="h-5 w-5 rounded-full bg-green-600" />
@@ -69,14 +83,14 @@ export function NotificationCard({
             <div className="flex-1">
               <h3
                 className={`text-sm font-semibold ${
-                  notification.is_read ? "text-gray-700" : "text-gray-900"
+                  isRead ? "text-gray-700" : "text-gray-900"
                 }`}
               >
                 {notification.title}
               </h3>
               <p
                 className={`mt-1 text-sm line-clamp-2 ${
-                  notification.is_read ? "text-gray-500" : "text-gray-700"
+                  isRead ? "text-gray-500" : "text-gray-700"
                 }`}
               >
                 {notification.content}
@@ -96,28 +110,27 @@ export function NotificationCard({
         </div>
       </div>
 
-      {!notification.is_read && (
+      {!isRead && (
         <div className="absolute right-3 top-3 h-2 w-2 rounded-full bg-green-600" />
       )}
-    </div>
+    </>
   );
 
   if (notification.url && notification.action === "open_url") {
     return (
       <Link
         href={notification.url}
-        className="block focus:outline-none focus-visible:ring-2 focus-visible:ring-green-300 focus-visible:ring-offset-2 rounded-xl"
-        onClick={() => {
-          if (!notification.is_read && onMarkAsRead) {
-            onMarkAsRead(notification.id);
-          }
-        }}
+        className={`block focus:outline-none focus-visible:ring-2 focus-visible:ring-green-300 focus-visible:ring-offset-2 ${cardClassName}`}
+        onClick={handleMarkAsRead}
       >
-        {cardContent}
+        {cardInner}
       </Link>
     );
   }
 
-  return cardContent;
+  return (
+    <div className={cardClassName} onClick={handleMarkAsRead}>
+      {cardInner}
+    </div>
+  );
 }
-

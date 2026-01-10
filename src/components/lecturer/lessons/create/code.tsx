@@ -873,8 +873,12 @@ func main() {
         lesson_ids: selectedLessonIds,
       });
 
-      const generatedExercises = response.data;
-      if (Array.isArray(generatedExercises) && generatedExercises.length > 0) {
+      // API trả về CodeExercise[] trực tiếp
+      const generatedExercises = Array.isArray(response.data)
+        ? response.data
+        : [];
+
+      if (generatedExercises.length > 0) {
         // Map API response to CodeExercise format
         const formattedExercises: CodeExercise[] = generatedExercises.map(
           (ex: any, index: number) => {

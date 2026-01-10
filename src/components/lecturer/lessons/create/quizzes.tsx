@@ -215,7 +215,9 @@ const CreateQuizLesson = () => {
         }
       );
 
+      // API trả về text thuần trực tiếp
       const generatedTitle = response.data;
+
       if (generatedTitle && typeof generatedTitle === "string") {
         setFormData((prev) => ({
           ...prev,
@@ -259,7 +261,9 @@ const CreateQuizLesson = () => {
         }
       );
 
+      // API trả về markdown string trực tiếp
       const generatedDescription = response.data;
+
       if (generatedDescription && typeof generatedDescription === "string") {
         setFormData((prev) => ({
           ...prev,
@@ -411,8 +415,12 @@ const CreateQuizLesson = () => {
         lesson_ids: selectedLessonIds,
       });
 
-      const generatedQuizzes = response.data;
-      if (Array.isArray(generatedQuizzes) && generatedQuizzes.length > 0) {
+      // API trả về Quiz[] trực tiếp
+      const generatedQuizzes = Array.isArray(response.data)
+        ? response.data
+        : [];
+
+      if (generatedQuizzes.length > 0) {
         // Map API response to CreateQuizData format
         const formattedQuizzes: CreateQuizData[] = generatedQuizzes.map(
           (quiz: any) => ({
@@ -759,7 +767,6 @@ const CreateQuizLesson = () => {
                     chi tiết cho bạn
                   </p>
                 </div>
-
               </div>
             </div>
           )}

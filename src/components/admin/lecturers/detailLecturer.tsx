@@ -19,6 +19,7 @@ import {
   HiCheckCircle,
   HiCurrencyDollar,
   HiEye,
+  HiPencil,
   HiStar,
   HiTrash,
   HiUser,
@@ -199,10 +200,15 @@ export default function DetailLecturer({ lecturerId }: { lecturerId: string }) {
 
   if (isLoading && !data) {
     return (
-      <div className="p-6">
-        <div className="animate-pulse space-y-4">
-          <div className="h-8 bg-gray-200 rounded w-1/4"></div>
-          <div className="h-64 bg-gray-200 rounded"></div>
+      <div className="min-h-screen bg-gray-50 p-6">
+        <div className="animate-pulse space-y-6">
+          <div className="h-12 bg-gray-200 rounded w-1/3"></div>
+          <div className="h-64 bg-gray-200 rounded-xl"></div>
+          <div className="grid grid-cols-4 gap-4">
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="h-24 bg-gray-200 rounded-xl"></div>
+            ))}
+          </div>
         </div>
       </div>
     );
@@ -210,17 +216,19 @@ export default function DetailLecturer({ lecturerId }: { lecturerId: string }) {
 
   if (error || !data) {
     return (
-      <div className="p-6 text-center py-12">
-        <HiXCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
-        <h2 className="text-xl font-semibold text-gray-900 mb-2">
-          Không tìm thấy giảng viên
-        </h2>
-        <button
-          onClick={() => router.push("/admin/lecturers")}
-          className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
-        >
-          Quay lại danh sách
-        </button>
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
+        <div className="text-center">
+          <HiXCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">
+            Không tìm thấy giảng viên
+          </h2>
+          <button
+            onClick={() => router.push("/admin/lecturers")}
+            className="px-4 py-2 bg-[#00bba7] text-white rounded-lg hover:bg-[#00a896] transition-colors"
+          >
+            Quay lại danh sách
+          </button>
+        </div>
       </div>
     );
   }
@@ -238,29 +246,29 @@ export default function DetailLecturer({ lecturerId }: { lecturerId: string }) {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 py-8">
+      <div className="max-w-7xl mx-auto px-4 py-6">
         {/* Header */}
-        <div className="mb-6 flex items-center justify-between">
+        <div className="mb-6 flex items-center justify-between flex-wrap gap-4">
           <div className="flex items-center gap-4">
             <button
               onClick={() => router.back()}
-              className="p-2 hover:bg-gray-100 rounded-lg"
+              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
             >
               <HiArrowLeft className="w-6 h-6 text-gray-600" />
             </button>
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">
+              <h1 className="text-3xl font-bold bg-gradient-to-r from-[#00bba7] to-emerald-600 bg-clip-text text-transparent">
                 Chi tiết giảng viên
               </h1>
               <p className="text-gray-600 mt-1">{data.fullname}</p>
             </div>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 flex-wrap">
             {data.is_banned ? (
               <button
                 onClick={handleUnban}
                 disabled={isSubmitting}
-                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 flex items-center gap-2"
+                className="px-4 py-2 bg-[#00bba7] text-white rounded-lg hover:bg-[#00a896] disabled:opacity-50 flex items-center gap-2 transition-colors"
               >
                 <HiBan className="w-4 h-4" />
                 Mở chặn
@@ -269,7 +277,7 @@ export default function DetailLecturer({ lecturerId }: { lecturerId: string }) {
               <button
                 onClick={() => setShowBanModal(true)}
                 disabled={isSubmitting}
-                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 flex items-center gap-2"
+                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 flex items-center gap-2 transition-colors"
               >
                 <HiBan className="w-4 h-4" />
                 Cấm giảng viên
@@ -278,135 +286,57 @@ export default function DetailLecturer({ lecturerId }: { lecturerId: string }) {
             <button
               onClick={handleRemoveRole}
               disabled={isSubmitting}
-              className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 disabled:opacity-50 flex items-center gap-2"
+              className="px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 disabled:opacity-50 flex items-center gap-2 transition-colors"
             >
               <HiUserRemove className="w-4 h-4" />
               Gỡ quyền GV
             </button>
             <button
+              onClick={() => router.push(`/admin/lecturers/${lecturerId}/edit`)}
+              className="px-4 py-2 bg-[#00bba7] text-white rounded-lg hover:bg-[#00a896] flex items-center gap-2 transition-colors"
+            >
+              <HiPencil className="w-4 h-4" />
+              Chỉnh sửa
+            </button>
+            <button
               onClick={handleDelete}
               disabled={isSubmitting || data.is_verified_email}
-              className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 flex items-center gap-2"
+              className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 flex items-center gap-2 transition-colors"
             >
               <HiTrash className="w-4 h-4" />
-              Xóa giảng viên
+              Xóa
             </button>
           </div>
         </div>
 
-        {/* Profile Card */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                <HiUser className="w-5 h-5 text-green-600" />
-                Thông tin cá nhân
-              </h3>
-              <div className="space-y-3">
-                <div>
-                  <label className="text-sm text-gray-600">ID</label>
-                  <p className="text-sm font-mono text-gray-900">{data.id}</p>
-                </div>
-                <div>
-                  <label className="text-sm text-gray-600">Họ và tên</label>
-                  <p className="text-sm text-gray-900">{data.fullname}</p>
-                </div>
-                <div>
-                  <label className="text-sm text-gray-600">Email</label>
-                  <p className="text-sm text-gray-900">{data.email}</p>
-                </div>
-                <div>
-                  <label className="text-sm text-gray-600">Giới thiệu</label>
-                  <div className="text-sm text-gray-900">
-                    {data.bio ? (
-                      <MarkdownRenderer content={data.bio} />
-                    ) : (
-                      "Chưa cập nhật"
-                    )}
-                  </div>
-                </div>
+        {/* Profile Header Card */}
+        <div className="bg-gradient-to-r from-[#00bba7] to-emerald-600 rounded-xl shadow-lg p-6 mb-6 text-white">
+          <div className="flex items-center gap-6 flex-wrap">
+            <div className="w-20 h-20 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center text-3xl font-bold">
+              {data.fullname.charAt(0).toUpperCase()}
+            </div>
+            <div className="flex-1 min-w-0">
+              <h2 className="text-2xl font-bold mb-2">{data.fullname}</h2>
+              <p className="text-white/90 mb-3">{data.email}</p>
+              <div className="flex items-center gap-4 flex-wrap">
                 <div className="flex items-center gap-2">
                   <div
                     className={`w-2 h-2 rounded-full ${
-                      data.is_verified_email ? "bg-green-500" : "bg-yellow-500"
+                      data.is_verified_email ? "bg-green-300" : "bg-yellow-300"
                     }`}
                   />
-                  <span className="text-sm text-gray-600">
+                  <span className="text-sm">
                     {data.is_verified_email
                       ? "Email đã xác thực"
                       : "Email chưa xác thực"}
                   </span>
                 </div>
-              </div>
-            </div>
-
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                <HiCurrencyDollar className="w-5 h-5 text-green-600" />
-                Thông tin ví
-              </h3>
-              <div className="space-y-3">
-                <div>
-                  <label className="text-sm text-gray-600">Số dư</label>
-                  <p className="text-lg font-bold text-green-600">
-                    {formatCurrency(data.wallet.balance)}
-                  </p>
-                </div>
-                <div>
-                  <label className="text-sm text-gray-600">Tổng nạp</label>
-                  <p className="text-sm text-gray-900">
-                    {formatCurrency(data.wallet.total_in)}
-                  </p>
-                </div>
-                <div>
-                  <label className="text-sm text-gray-600">Tổng chi</label>
-                  <p className="text-sm text-gray-900">
-                    {formatCurrency(data.wallet.total_out)}
-                  </p>
-                </div>
-                <div>
-                  <label className="text-sm text-gray-600">
-                    Giao dịch cuối
-                  </label>
-                  <p className="text-sm text-gray-900">
-                    {formatDate(data.wallet.last_transaction_at)}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                <HiCheckCircle className="w-5 h-5 text-green-600" />
-                Nâng cấp giảng viên
-              </h3>
-              <div className="space-y-3">
-                <div>
-                  <label className="text-sm text-gray-600">Phí nâng cấp</label>
-                  <p className="text-lg font-bold text-green-600">
-                    {formatCurrency(data.upgrade_payment.amount)}
-                  </p>
-                </div>
-                <div>
-                  <label className="text-sm text-gray-600">
-                    Thời gian thanh toán
-                  </label>
-                  <p className="text-sm text-gray-900">
-                    {formatDate(data.upgrade_payment.paid_time)}
-                  </p>
-                </div>
-                <div>
-                  <label className="text-sm text-gray-600">Trạng thái</label>
-                  <p className="text-sm font-medium text-green-700">
-                    {data.upgrade_payment.payment_status}
-                  </p>
-                </div>
-                <div>
-                  <label className="text-sm text-gray-600">Ghi chú</label>
-                  <p className="text-sm text-gray-900">
-                    {data.upgrade_payment.note}
-                  </p>
-                </div>
+                {data.is_banned && (
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 rounded-full bg-red-300" />
+                    <span className="text-sm">Bị cấm</span>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -414,55 +344,98 @@ export default function DetailLecturer({ lecturerId }: { lecturerId: string }) {
 
         {/* Stats */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-            <div className="flex items-center justify-between">
+          <StatCard
+            icon={HiAcademicCap}
+            label="Tổng khóa học"
+            value={coursesData?.total_items || 0}
+          />
+          <StatCard
+            icon={HiUsers}
+            label="Tổng học viên"
+            value={totalStudents}
+          />
+          <StatCard icon={HiStar} label="Đánh giá TB" value={avgRating} />
+          <StatCard icon={HiEye} label="Tổng lượt xem" value={totalViews} />
+        </div>
+
+        {/* Main Content */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+          {/* Personal Info */}
+          <div className="bg-white rounded-xl shadow-sm border border-green-200 p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+              <HiUser className="w-5 h-5 text-[#00bba7]" />
+              Thông tin cá nhân
+            </h3>
+            <div className="space-y-3">
+              <InfoRow label="ID" value={data.id} />
+              <InfoRow label="Họ và tên" value={data.fullname} />
+              <InfoRow label="Email" value={data.email} />
               <div>
-                <p className="text-sm text-gray-600 mb-1">Tổng khóa học</p>
-                <p className="text-2xl font-bold text-gray-900">
-                  {coursesData?.total_items || 0}
-                </p>
-              </div>
-              <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-                <HiAcademicCap className="w-6 h-6 text-green-600" />
+                <label className="text-sm text-gray-600 mb-1 block">
+                  Giới thiệu
+                </label>
+                <div className="text-sm text-gray-900">
+                  {data.bio ? (
+                    <MarkdownRenderer content={data.bio} />
+                  ) : (
+                    <span className="text-gray-400">Chưa cập nhật</span>
+                  )}
+                </div>
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600 mb-1">Tổng học viên</p>
-                <p className="text-2xl font-bold text-gray-900">
-                  {totalStudents}
-                </p>
-              </div>
-              <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-                <HiUsers className="w-6 h-6 text-green-600" />
-              </div>
+          {/* Wallet Info */}
+          <div className="bg-white rounded-xl shadow-sm border border-green-200 p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+              <HiCurrencyDollar className="w-5 h-5 text-[#00bba7]" />
+              Thông tin ví
+            </h3>
+            <div className="space-y-3">
+              <InfoRow
+                label="Số dư"
+                value={formatCurrency(data.wallet.balance)}
+                highlight
+              />
+              <InfoRow
+                label="Tổng nạp"
+                value={formatCurrency(data.wallet.total_in)}
+              />
+              <InfoRow
+                label="Tổng chi"
+                value={formatCurrency(data.wallet.total_out)}
+              />
+              <InfoRow
+                label="Giao dịch cuối"
+                value={formatDate(data.wallet.last_transaction_at)}
+              />
             </div>
           </div>
 
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600 mb-1">Đánh giá TB</p>
-                <p className="text-2xl font-bold text-gray-900">{avgRating}</p>
-              </div>
-              <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-                <HiStar className="w-6 h-6 text-green-600" />
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600 mb-1">Tổng lượt xem</p>
-                <p className="text-2xl font-bold text-gray-900">{totalViews}</p>
-              </div>
-              <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-                <HiEye className="w-6 h-6 text-green-600" />
-              </div>
+          {/* Upgrade Payment */}
+          <div className="bg-white rounded-xl shadow-sm border border-green-200 p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+              <HiCheckCircle className="w-5 h-5 text-[#00bba7]" />
+              Nâng cấp giảng viên
+            </h3>
+            <div className="space-y-3">
+              <InfoRow
+                label="Phí nâng cấp"
+                value={formatCurrency(data.upgrade_payment.amount)}
+                highlight
+              />
+              <InfoRow
+                label="Thời gian thanh toán"
+                value={formatDate(data.upgrade_payment.paid_time)}
+              />
+              <InfoRow
+                label="Trạng thái"
+                value={data.upgrade_payment.payment_status}
+              />
+              <InfoRow
+                label="Ghi chú"
+                value={data.upgrade_payment.note || "Không có"}
+              />
             </div>
           </div>
         </div>
@@ -470,10 +443,10 @@ export default function DetailLecturer({ lecturerId }: { lecturerId: string }) {
         {/* Courses & Transactions */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Courses */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+          <div className="bg-white rounded-xl shadow-sm border border-green-200 p-6">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                <HiAcademicCap className="w-5 h-5 text-green-600" />
+                <HiAcademicCap className="w-5 h-5 text-[#00bba7]" />
                 Khóa học
               </h3>
               <span className="text-sm text-gray-600">
@@ -481,14 +454,14 @@ export default function DetailLecturer({ lecturerId }: { lecturerId: string }) {
               </span>
             </div>
 
-            <div className="flex items-center gap-4 mb-4">
+            <div className="flex items-center gap-3 mb-4">
               <select
                 value={coursesSortBy}
                 onChange={(e) => {
                   setCoursesSortBy(e.target.value);
                   setCoursesPage(1);
                 }}
-                className="px-3 py-2 text-sm border border-gray-300 rounded-lg"
+                className="flex-1 px-3 py-2 text-sm border-2 border-green-200 rounded-lg focus:border-[#00bba7] focus:outline-none focus:ring-2 focus:ring-green-500/20"
               >
                 <option value="created_at">Ngày tạo</option>
                 <option value="title">Tên</option>
@@ -501,7 +474,7 @@ export default function DetailLecturer({ lecturerId }: { lecturerId: string }) {
                   setCoursesOrder(e.target.value as "asc" | "desc");
                   setCoursesPage(1);
                 }}
-                className="px-3 py-2 text-sm border border-gray-300 rounded-lg"
+                className="px-3 py-2 text-sm border-2 border-green-200 rounded-lg focus:border-[#00bba7] focus:outline-none focus:ring-2 focus:ring-green-500/20"
               >
                 <option value="desc">Giảm dần</option>
                 <option value="asc">Tăng dần</option>
@@ -524,7 +497,7 @@ export default function DetailLecturer({ lecturerId }: { lecturerId: string }) {
                         setSelectedCourse(course);
                         setShowCourseModal(true);
                       }}
-                      className="bg-gray-50 rounded-lg p-3 cursor-pointer hover:bg-gray-100"
+                      className="bg-gray-50 rounded-lg p-3 cursor-pointer hover:bg-green-50 hover:border-green-200 border border-transparent transition-all"
                     >
                       <img
                         src={getGoogleDriveImageUrl(course.thumbnail)}
@@ -540,7 +513,7 @@ export default function DetailLecturer({ lecturerId }: { lecturerId: string }) {
                       </h4>
                       <div className="flex items-center justify-between text-xs text-gray-600">
                         <span>{course.total_enrolls} học viên</span>
-                        <span className="font-bold text-green-600">
+                        <span className="font-bold text-[#00bba7]">
                           {formatCurrency(course.price)}
                         </span>
                       </div>
@@ -569,10 +542,10 @@ export default function DetailLecturer({ lecturerId }: { lecturerId: string }) {
           </div>
 
           {/* Transactions */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+          <div className="bg-white rounded-xl shadow-sm border border-green-200 p-6">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                <HiCurrencyDollar className="w-5 h-5 text-green-600" />
+                <HiCurrencyDollar className="w-5 h-5 text-[#00bba7]" />
                 Giao dịch
               </h3>
               <span className="text-sm text-gray-600">
@@ -586,20 +559,20 @@ export default function DetailLecturer({ lecturerId }: { lecturerId: string }) {
                   {data.transactions.map((txn) => (
                     <div
                       key={txn.id}
-                      className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                      className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-green-50 transition-colors"
                     >
-                      <div>
-                        <p className="text-sm font-medium text-gray-900">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-gray-900 truncate">
                           {txn.description}
                         </p>
-                        <p className="text-xs text-gray-500">
+                        <p className="text-xs text-gray-500 mt-1">
                           {txn.transaction_code} • {formatDate(txn.created_at)}
                         </p>
                       </div>
-                      <div className="text-right">
+                      <div className="text-right ml-4">
                         <p
-                          className={`text-sm font-medium ${
-                            txn.amount > 0 ? "text-green-600" : "text-red-600"
+                          className={`text-sm font-semibold ${
+                            txn.amount > 0 ? "text-[#00bba7]" : "text-red-600"
                           }`}
                         >
                           {txn.amount > 0 ? "+" : ""}
@@ -681,6 +654,55 @@ export default function DetailLecturer({ lecturerId }: { lecturerId: string }) {
   );
 }
 
+function StatCard({
+  icon: Icon,
+  label,
+  value,
+}: {
+  icon: any;
+  label: string;
+  value: string | number;
+}) {
+  return (
+    <div className="bg-white rounded-xl shadow-sm border border-green-200 p-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-sm text-gray-600 mb-1">{label}</p>
+          <p className="text-2xl font-bold text-gray-900">{value}</p>
+        </div>
+        <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+          <Icon className="w-6 h-6 text-[#00bba7]" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function InfoRow({
+  label,
+  value,
+  highlight,
+}: {
+  label: string;
+  value: string;
+  highlight?: boolean;
+}) {
+  return (
+    <div>
+      <label className="text-sm text-gray-600 mb-1 block">{label}</label>
+      <p
+        className={`text-sm ${
+          highlight
+            ? "font-bold text-[#00bba7] text-lg"
+            : "text-gray-900 font-mono"
+        }`}
+      >
+        {value}
+      </p>
+    </div>
+  );
+}
+
 function BanModal({
   banType,
   setBanType,
@@ -717,7 +739,10 @@ function BanModal({
           <h3 className="text-lg font-semibold text-gray-900">
             Cấm giảng viên
           </h3>
-          <button onClick={onCancel} className="p-1 hover:bg-gray-100 rounded">
+          <button
+            onClick={onCancel}
+            className="p-1 hover:bg-gray-100 rounded transition-colors"
+          >
             <HiX className="w-5 h-5 text-gray-600" />
           </button>
         </div>
@@ -730,20 +755,20 @@ function BanModal({
             <div className="grid grid-cols-2 gap-2">
               <button
                 onClick={() => setBanType("temporary")}
-                className={`px-4 py-2 rounded-lg border-2 ${
+                className={`px-4 py-2 rounded-lg border-2 transition-all ${
                   banType === "temporary"
-                    ? "border-orange-500 bg-orange-50 text-orange-700"
-                    : "border-gray-200"
+                    ? "border-yellow-500 bg-yellow-50 text-yellow-700"
+                    : "border-gray-200 hover:border-yellow-300"
                 }`}
               >
                 Tạm thời
               </button>
               <button
                 onClick={() => setBanType("permanent")}
-                className={`px-4 py-2 rounded-lg border-2 ${
+                className={`px-4 py-2 rounded-lg border-2 transition-all ${
                   banType === "permanent"
                     ? "border-red-500 bg-red-50 text-red-700"
-                    : "border-gray-200"
+                    : "border-gray-200 hover:border-red-300"
                 }`}
               >
                 Vĩnh viễn
@@ -758,7 +783,7 @@ function BanModal({
             <textarea
               value={banReason}
               onChange={(e) => setBanReason(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+              className="w-full px-3 py-2 border-2 border-green-200 rounded-lg focus:border-[#00bba7] focus:outline-none focus:ring-2 focus:ring-green-500/20"
               rows={3}
               placeholder="Nhập lý do cấm..."
             />
@@ -775,7 +800,7 @@ function BanModal({
                   value={banUntilDate}
                   onChange={(e) => setBanUntilDate(e.target.value)}
                   min={new Date().toISOString().split("T")[0]}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                  className="w-full px-3 py-2 border-2 border-green-200 rounded-lg focus:border-[#00bba7] focus:outline-none focus:ring-2 focus:ring-green-500/20"
                 />
               </div>
               <div>
@@ -786,7 +811,7 @@ function BanModal({
                   type="time"
                   value={banUntilTime}
                   onChange={(e) => setBanUntilTime(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                  className="w-full px-3 py-2 border-2 border-green-200 rounded-lg focus:border-[#00bba7] focus:outline-none focus:ring-2 focus:ring-green-500/20"
                 />
               </div>
             </div>
@@ -796,14 +821,14 @@ function BanModal({
             <button
               onClick={onCancel}
               disabled={isSubmitting}
-              className="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50"
+              className="px-4 py-2 text-gray-600 border-2 border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 transition-colors"
             >
               Hủy
             </button>
             <button
               onClick={onConfirm}
               disabled={isSubmitting || !banReason.trim()}
-              className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50"
+              className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 transition-colors"
             >
               Xác nhận
             </button>
@@ -839,7 +864,10 @@ function DeleteModal({
           <h3 className="text-lg font-semibold text-gray-900">
             Xóa giảng viên
           </h3>
-          <button onClick={onCancel} className="p-1 hover:bg-gray-100 rounded">
+          <button
+            onClick={onCancel}
+            className="p-1 hover:bg-gray-100 rounded transition-colors"
+          >
             <HiX className="w-5 h-5 text-gray-600" />
           </button>
         </div>
@@ -852,13 +880,13 @@ function DeleteModal({
             <textarea
               value={deleteReason}
               onChange={(e) => setDeleteReason(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+              className="w-full px-3 py-2 border-2 border-green-200 rounded-lg focus:border-[#00bba7] focus:outline-none focus:ring-2 focus:ring-green-500/20"
               rows={3}
               placeholder="Nhập lý do xóa..."
             />
           </div>
 
-          <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+          <div className="p-3 bg-red-50 border-2 border-red-200 rounded-lg">
             <p className="text-sm text-red-800">
               Cảnh báo: Hành động này không thể hoàn tác!
             </p>
@@ -868,14 +896,14 @@ function DeleteModal({
             <button
               onClick={onCancel}
               disabled={isSubmitting}
-              className="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50"
+              className="px-4 py-2 text-gray-600 border-2 border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 transition-colors"
             >
               Hủy
             </button>
             <button
               onClick={onConfirm}
               disabled={isSubmitting || !deleteReason.trim()}
-              className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50"
+              className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 transition-colors"
             >
               Xác nhận
             </button>
@@ -921,7 +949,10 @@ function CourseModal({
               </span>
             </div>
           </div>
-          <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded">
+          <button
+            onClick={onClose}
+            className="p-2 hover:bg-gray-100 rounded transition-colors"
+          >
             <HiX className="w-5 h-5 text-gray-600" />
           </button>
         </div>
@@ -936,7 +967,7 @@ function CourseModal({
             <div className="md:col-span-2 space-y-2">
               <div className="flex items-center justify-between p-2 bg-gray-50 rounded">
                 <span className="text-sm text-gray-600">Giá</span>
-                <span className="font-bold text-green-600">
+                <span className="font-bold text-[#00bba7]">
                   {formatCurrency(course.price)}
                 </span>
               </div>
@@ -973,9 +1004,9 @@ function CourseModal({
               {course.sections.map((section: any, idx: number) => (
                 <div
                   key={section.id || idx}
-                  className="border border-gray-200 rounded-lg"
+                  className="border border-green-200 rounded-lg"
                 >
-                  <div className="px-4 py-3 bg-gray-50 border-b border-gray-200">
+                  <div className="px-4 py-3 bg-green-50 border-b border-green-200">
                     <h5 className="font-medium text-gray-900">
                       Chương {idx + 1}: {section.title || `Chương ${idx + 1}`}
                     </h5>
@@ -990,7 +1021,7 @@ function CourseModal({
                           key={lesson.id || lidx}
                           className="flex items-center gap-3 p-2 bg-gray-50 rounded"
                         >
-                          <div className="w-6 h-6 bg-green-600 text-white rounded-full flex items-center justify-center text-xs font-bold">
+                          <div className="w-6 h-6 bg-[#00bba7] text-white rounded-full flex items-center justify-center text-xs font-bold">
                             {lidx + 1}
                           </div>
                           <div className="flex-1">
@@ -1015,7 +1046,7 @@ function CourseModal({
         <div className="p-6 border-t border-gray-200 flex justify-end">
           <button
             onClick={onClose}
-            className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+            className="px-6 py-2 bg-[#00bba7] text-white rounded-lg hover:bg-[#00a896] transition-colors"
           >
             Đóng
           </button>

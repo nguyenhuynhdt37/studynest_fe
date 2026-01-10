@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import {
+  HiChat,
   HiChevronDown,
   HiClipboardList,
   HiClock,
@@ -15,11 +16,15 @@ import {
 interface LearningHeaderProps {
   courseTitle: string;
   onOpenProgress: () => void;
+  chatOpen?: boolean;
+  onToggleChat?: () => void;
 }
 
 export default function LearningHeader({
   courseTitle,
   onOpenProgress,
+  chatOpen,
+  onToggleChat,
 }: LearningHeaderProps) {
   const [showMoreOptions, setShowMoreOptions] = useState(false);
   const router = useRouter();
@@ -69,6 +74,23 @@ export default function LearningHeader({
 
           {/* Right Side */}
           <div className="flex items-center space-x-4">
+            {/* Tutor Chat Button */}
+            {onToggleChat && (
+              <button
+                onClick={onToggleChat}
+                className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors ${
+                  chatOpen
+                    ? "bg-green-600 text-white"
+                    : "bg-green-50 hover:bg-green-100 text-green-700"
+                }`}
+              >
+                <HiChat className="w-5 h-5" />
+                <span className="text-sm font-medium">
+                  {chatOpen ? "Đóng chat" : "Hỏi trợ giảng"}
+                </span>
+              </button>
+            )}
+
             {/* Progress Button */}
             <button
               onClick={onOpenProgress}

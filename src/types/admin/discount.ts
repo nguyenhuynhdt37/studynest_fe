@@ -152,3 +152,14 @@ export interface DiscountDetail {
   targets: DiscountDetailTarget[];
   usage_history: DiscountDetailUsageHistory[];
 }
+
+// Weak Course (for auto-target feature)
+export interface WeakCourse {
+  course_id: string;
+  title: string;
+  rating_avg: number;
+  views: number;
+  total_enrolls: number;
+  revenue: number;
+  weak_score: number;
+}

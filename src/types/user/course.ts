@@ -4,6 +4,7 @@ export interface Course {
   slug?: string;
   title: string;
   instructor?: string;
+  instructorAvatar?: string;
   rating?: number;
   students?: number;
   price: number | null | undefined;
@@ -16,7 +17,7 @@ export interface Course {
 
 export interface CourseCardProps {
   course: Course;
-  section: "featured" | "trending" | "top" | "newest";
+  section: "featured" | "trending" | "top" | "newest" | "recommended";
   showPreview?: boolean;
 }
 
@@ -31,7 +32,7 @@ export interface CoursesCarouselProps {
   isLoadingFeeds: boolean;
   isFetchingMore: boolean;
   itemsPerPage: number;
-  section: "featured" | "trending" | "top" | "newest";
+  section: "featured" | "trending" | "top" | "newest" | "recommended";
 }
 
 export interface FeedData {
@@ -54,4 +55,43 @@ export interface DynamicFeedsProps {
   itemsPerPage: number;
   onLoadMore: (feedType: string, cursor: string) => void;
   isFetchingMore: Record<string, boolean>;
+}
+
+export interface CourseItem {
+  id: string;
+  slug: string;
+  title: string;
+  thumbnail: string;
+  base_price: number;
+  views: number;
+  rating: number;
+  enrolls: number;
+  tags: string[];
+  instructor: {
+    id: string;
+    name: string;
+    avatar: string;
+  };
+}
+
+export interface FeedResponse {
+  items: CourseItem[];
+  next_cursor: string | null;
+}
+
+export interface RecommendedItem {
+  id: string;
+  title: string;
+  thumbnail: string;
+  slug: string;
+  instructor: {
+    id: string;
+    name: string;
+    avatar: string;
+  };
+  similarity: number;
+}
+
+export interface RecommendedResponse {
+  items: RecommendedItem[];
 }

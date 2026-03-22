@@ -120,6 +120,7 @@ export const SourceList = memo(function SourceList({
                         <span className="text-[10px] bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded-full font-medium">
                           {Math.round(source.similarity * 100)}%
                         </span>
+                        
                       )}
                     </div>
                     <h4 className="text-sm font-semibold text-gray-900 leading-snug truncate">

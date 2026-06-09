@@ -25,6 +25,7 @@ interface personalizeProps {
 
 const Personalize = ({ learningFields }: personalizeProps) => {
   const [currentStep, setCurrentStep] = useState(0);
+  const [hasVisitedStep1, setHasVisitedStep1] = useState(false);
   const [selectedFields, setSelectedFields] = useState<LearningField[]>([]);
   const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -84,19 +85,13 @@ const Personalize = ({ learningFields }: personalizeProps) => {
 
   // Navigate between steps
   const handleNext = () => {
-    // Check if any field is selected and if it has topics (aggregating all topics)
-    const allTopics = selectedFields.flatMap(f => f.topics);
-
-    if (
-      currentStep === 0 && selectedFields.length > 0
-        ? allTopics.length > 0
-        : false
-    ) {
+    if (currentStep === 0) {
       if (selectedFields.length === 0) {
         setErrors({ field: "Vui lòng chọn ít nhất một lĩnh vực học tập" });
         return;
       }
       setCurrentStep(1);
+      setHasVisitedStep1(true);
     } else {
       handleSubmit();
     }
@@ -109,12 +104,12 @@ const Personalize = ({ learningFields }: personalizeProps) => {
   };
 
   // Validate current step
-  const isCurrentStepValid = () => {
+  const isCurrentStepValid = (): boolean => {
     if (currentStep === 0) {
       return selectedFields.length > 0;
     }
     if (currentStep === 1) {
-      return selectedSkills.length > 0;
+      return true; // skills are optional at step 1
     }
     return false;
   };
@@ -127,34 +122,26 @@ const Personalize = ({ learningFields }: personalizeProps) => {
     }
 
     const allTopics = selectedFields.flatMap(f => f.topics);
-
-    if (allTopics.length > 0 && selectedSkills.length === 0) {
+    if (allTopics.length > 0 && selectedSkills.length === 0 && hasVisitedStep1) {
       setErrors({ skills: "Vui lòng chọn ít nhất một kỹ năng" });
       return;
-    } else {
-      let personalize = "";
-      const fieldNames = selectedFields.map(f => f.name).join(", ");
+    }
 
-      if (selectedSkills.length > 0) {
-        const skillsCopy = [...selectedSkills];
-        personalize = `Lĩnh vực: ${fieldNames}. Kỹ năng: ${skillsCopy.join(", ")}.`;
-      } else {
-        personalize = `Lĩnh vực: ${fieldNames}.`;
-      }
+    const fieldNames = selectedFields.map(f => f.name).join(", ");
+    const personalize = selectedSkills.length > 0
+      ? `Lĩnh vực: ${fieldNames}. Kỹ năng: ${selectedSkills.join(", ")}.`
+      : `Lĩnh vực: ${fieldNames}.`;
 
-      setIsLoading(true);
-      try {
-        await api.post("/user_preferences", {
-          preferences: personalize,
-        });
-        router.push("/");
-      } catch (error: any) {
-        if (error?.response?.status === 401) {
-          router.push("/auth/login?redirect=/personalize");
-        }
-      } finally {
-        setIsLoading(false);
+    setIsLoading(true);
+    try {
+      await api.post("/user_preferences", { preferences: personalize });
+      router.push("/");
+    } catch (error: any) {
+      if (error?.response?.status === 401) {
+        router.push("/auth/login?redirect=/personalize");
       }
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -211,7 +198,7 @@ const Personalize = ({ learningFields }: personalizeProps) => {
           <div className="mt-8 max-w-md mx-auto">
             <div className="flex items-center justify-between text-sm text-gray-500 mb-2">
               <span>
-                Bước {currentStep + 1} / {1}
+                Bước {currentStep + 1} / 2
               </span>
               <span>
                 {progress}%
@@ -275,14 +262,14 @@ const Personalize = ({ learningFields }: personalizeProps) => {
                     <label
                       key={learningField.id}
                       className={`group flex items-center p-5 rounded-xl cursor-pointer transition-all duration-200 hover:shadow-md ${isSelected
-                          ? "bg-green-50 border-2 border-green-500 shadow-lg transform scale-[1.02]"
-                          : "bg-white border-2 border-gray-100 hover:border-green-200 hover:bg-green-50/30"
+                        ? "bg-green-50 border-2 border-green-500 shadow-lg transform scale-[1.02]"
+                        : "bg-white border-2 border-gray-100 hover:border-green-200 hover:bg-green-50/30"
                         }`}
                     >
                       <div
                         className={`shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${isSelected
-                            ? "border-green-500 bg-green-500"
-                            : "border-gray-300 group-hover:border-green-400"
+                          ? "border-green-500 bg-green-500"
+                          : "border-gray-300 group-hover:border-green-400"
                           }`}
                       >
                         {isSelected && (
@@ -291,8 +278,8 @@ const Personalize = ({ learningFields }: personalizeProps) => {
                       </div>
                       <span
                         className={`ml-4 text-lg font-medium transition-colors ${isSelected
-                            ? "text-green-900"
-                            : "text-gray-700 group-hover:text-green-800"
+                          ? "text-green-900"
+                          : "text-gray-700 group-hover:text-green-800"
                           }`}
                       >
                         {learningField.name}
@@ -384,8 +371,8 @@ const Personalize = ({ learningFields }: personalizeProps) => {
                           type="button"
                           onClick={() => handleSkillToggle(topic.name)}
                           className={`px-4 py-2 rounded-full border text-sm font-medium transition-all hover:shadow-md ${isSelected
-                              ? "bg-green-600 text-white border-green-600 shadow-lg"
-                              : "bg-white text-gray-700 border-gray-300 hover:border-green-400 hover:bg-green-50"
+                            ? "bg-green-600 text-white border-green-600 shadow-lg"
+                            : "bg-white text-gray-700 border-gray-300 hover:border-green-400 hover:bg-green-50"
                             }`}
                         >
                           + {topic.name}
@@ -418,7 +405,7 @@ const Personalize = ({ learningFields }: personalizeProps) => {
             <button
               type="button"
               onClick={handleNext}
-              disabled={!isCurrentStepValid() || isLoading}
+              disabled={isLoading}
               className="px-8 py-3 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg hover:shadow-xl disabled:shadow-none"
             >
               {isLoading ? (
@@ -426,8 +413,7 @@ const Personalize = ({ learningFields }: personalizeProps) => {
                   <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
                   Đang xử lý...
                 </div>
-              ) : currentStep === 1 ||
-                (currentStep === 0 && selectedFields.flatMap(f => f.topics).length === 0) ? (
+              ) : currentStep === 1 ? (
                 "Hoàn thành"
               ) : (
                 "Tiếp theo"

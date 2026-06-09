@@ -22,6 +22,68 @@ async function getUser(token: string) {
   }
 }
 
+async function refreshSession(refreshToken: string) {
+  try {
+    const res = await fetch(`${backendUrl}/api/v1/auth/refresh`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        refresh_token: refreshToken,
+        device_type: "WEB",
+      }),
+    });
+
+    if (!res.ok) return null;
+    return await res.json();
+  } catch {
+    return null;
+  }
+}
+
+function withSessionCookies(req: NextRequest, session: any) {
+  const requestHeaders = new Headers(req.headers);
+  const existingCookie = requestHeaders.get("cookie") || "";
+  const cookieParts = existingCookie
+    .split(";")
+    .map((part) => part.trim())
+    .filter(
+      (part) =>
+        part &&
+        !part.startsWith("access_token=") &&
+        !part.startsWith("refresh_token=")
+    );
+
+  cookieParts.push(`access_token=${session.access_token}`);
+  cookieParts.push(`refresh_token=${session.refresh_token}`);
+  requestHeaders.set("cookie", cookieParts.join("; "));
+
+  const response = NextResponse.next({
+    request: {
+      headers: requestHeaders,
+    },
+  });
+
+  const secure = req.nextUrl.protocol === "https:";
+  response.cookies.set("access_token", session.access_token, {
+    httpOnly: true,
+    secure,
+    sameSite: "lax",
+    maxAge: 60 * 15,
+    path: "/",
+  });
+  response.cookies.set("refresh_token", session.refresh_token, {
+    httpOnly: true,
+    secure,
+    sameSite: "lax",
+    maxAge: 60 * 60 * 24 * 30,
+    path: "/",
+  });
+
+  return response;
+}
+
 const ADMIN_PREFIX = "/admin";
 const LECTURER_PREFIX = "/lecturer";
 const USER_PREFIXES = [
@@ -44,7 +106,8 @@ export async function middleware(req: NextRequest) {
   const protocol = req.headers.get("x-forwarded-proto") || "http";
   const origin = `${protocol}://${host}`;
 
-  const token = req.cookies.get("access_token")?.value;
+  let token = req.cookies.get("access_token")?.value;
+  const refreshToken = req.cookies.get("refresh_token")?.value;
 
   const isAdmin = path.startsWith(ADMIN_PREFIX);
   const isLecturer = path.startsWith(LECTURER_PREFIX);
@@ -55,15 +118,97 @@ export async function middleware(req: NextRequest) {
     return NextResponse.next();
   }
 
-  // No token
-  if (!token) {
+  // No token and no refresh token -> Redirect to login
+  if (!token && !refreshToken) {
     return NextResponse.redirect(
       new URL(`/login?redirect=${encodeURIComponent(path)}`, origin)
     );
   }
 
-  const user = await getUser(token);
+  if (!token && refreshToken) {
+    const session = await refreshSession(refreshToken);
+    if (!session?.access_token || !session?.refresh_token) {
+      return NextResponse.redirect(
+        new URL(`/login?redirect=${encodeURIComponent(path)}`, origin)
+      );
+    }
+
+    token = session.access_token;
+    const user = await getUser(session.access_token);
+    if (!user) {
+      return NextResponse.redirect(
+        new URL(`/login?redirect=${encodeURIComponent(path)}`, origin)
+      );
+    }
+
+    if (user.is_banned) {
+      return NextResponse.redirect(new URL("/banned", origin));
+    }
+
+    if (isAdmin && !user.roles?.includes("ADMIN")) {
+      return NextResponse.redirect(new URL("/", origin));
+    }
+
+    if (
+      isLecturer &&
+      !path.startsWith("/lecturer/welcome") &&
+      !user.roles?.includes("LECTURER")
+    ) {
+      return NextResponse.redirect(new URL("/", origin));
+    }
+
+    if (
+      isUserRoute &&
+      !user.roles?.includes("USER") &&
+      !user.roles?.includes("LECTURER") &&
+      !user.roles?.includes("ADMIN")
+    ) {
+      return NextResponse.redirect(new URL("/", origin));
+    }
+
+    return withSessionCookies(req, session);
+  }
+
+  const user = await getUser(token!);
   if (!user) {
+    if (refreshToken) {
+      const session = await refreshSession(refreshToken);
+      if (session?.access_token && session?.refresh_token) {
+        const refreshedUser = await getUser(session.access_token);
+        if (!refreshedUser) {
+          return NextResponse.redirect(
+            new URL(`/login?redirect=${encodeURIComponent(path)}`, origin)
+          );
+        }
+
+        if (refreshedUser.is_banned) {
+          return NextResponse.redirect(new URL("/banned", origin));
+        }
+
+        if (isAdmin && !refreshedUser.roles?.includes("ADMIN")) {
+          return NextResponse.redirect(new URL("/", origin));
+        }
+
+        if (
+          isLecturer &&
+          !path.startsWith("/lecturer/welcome") &&
+          !refreshedUser.roles?.includes("LECTURER")
+        ) {
+          return NextResponse.redirect(new URL("/", origin));
+        }
+
+        if (
+          isUserRoute &&
+          !refreshedUser.roles?.includes("USER") &&
+          !refreshedUser.roles?.includes("LECTURER") &&
+          !refreshedUser.roles?.includes("ADMIN")
+        ) {
+          return NextResponse.redirect(new URL("/", origin));
+        }
+
+        return withSessionCookies(req, session);
+      }
+    }
     return NextResponse.redirect(
       new URL(`/login?redirect=${encodeURIComponent(path)}`, origin)
     );
